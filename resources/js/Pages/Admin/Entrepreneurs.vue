@@ -31,13 +31,16 @@
     </nav>
 
     <div class="max-w-7xl mx-auto px-8 py-10">
-      <!-- Success Message -->
+      <!-- Success/Error Messages -->
       <div v-if="$page.props.flash.success" class="mb-6 p-4 bg-white border-l-4 border-green-500">
         <p class="text-green-700 text-sm">{{ $page.props.flash.success }}</p>
       </div>
+      <div v-if="$page.props.flash.error" class="mb-6 p-4 bg-white border-l-4 border-red-500">
+        <p class="text-red-700 text-sm">{{ $page.props.flash.error }}</p>
+      </div>
 
       <!-- Filters -->
-      <div class="bg-white p-4 mb-6 flex items-center space-x-4">
+      <div class="bg-white p-4 mb-6 flex items-center space-x-3">
         <input
           v-model="search"
           type="text"
@@ -53,10 +56,35 @@
         </select>
         <button
           @click="doSearch"
-          class="px-6 py-3 bg-[#3E6AE1] text-white text-sm font-medium rounded hover:bg-[#3558c4] transition-colors duration-300"
+          class="px-5 py-3 bg-[#3E6AE1] text-white text-sm font-medium rounded hover:bg-[#3558c4] transition-colors duration-300"
         >
           搜索
         </button>
+        <button
+          @click="resetFilters"
+          class="px-5 py-3 border border-[#EEEEEE] text-gray-500 text-sm rounded hover:bg-[#F4F4F4] transition-colors duration-300"
+        >
+          重置
+        </button>
+      </div>
+
+      <!-- Batch Actions (仅在选中了待审核项时显示) -->
+      <div v-if="selectedPending.length > 0" class="bg-[#F4F4F4] p-4 mb-4 flex items-center justify-between">
+        <span class="text-sm text-gray-600">已选择 {{ selectedPending.length }} 条待审核记录</span>
+        <div class="flex items-center space-x-3">
+          <button
+            @click="batchApprove"
+            class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
+          >
+            批量通过
+          </button>
+          <button
+            @click="batchReject"
+            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700"
+          >
+            批量拒绝
+          </button>
+        </div>
       </div>
 
       <!-- Table -->
@@ -74,6 +102,14 @@
           <table class="w-full">
             <thead>
               <tr class="border-b border-[#EEEEEE]">
+                <th class="px-6 py-4 text-left">
+                  <input
+                    type="checkbox"
+                    @change="toggleSelectAll"
+                    :checked="isAllPendingSelected"
+                    class="rounded border-gray-300"
+                  />
+                </th>
                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">企业家</th>
                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">状态</th>
                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">推荐</th>
@@ -84,6 +120,15 @@
             </thead>
             <tbody class="divide-y divide-[#EEEEEE]">
               <tr v-for="entrepreneur in entrepreneurs.data" :key="entrepreneur.id" class="hover:bg-[#F4F4F4]/50">
+                <td class="px-6 py-4">
+                  <input
+                    v-if="entrepreneur.status === 'pending'"
+                    type="checkbox"
+                    :value="entrepreneur.id"
+                    v-model="selectedIds"
+                    class="rounded border-gray-300"
+                  />
+                </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center">
                     <div class="w-10 h-10 bg-[#F4F4F4] rounded-full overflow-hidden mr-3 flex-shrink-0">
@@ -134,7 +179,7 @@
           <div class="flex items-center space-x-4">
             <Link
               v-if="entrepreneurs.current_page > 1"
-              :href="`/admin/entrepreneurs?page=${entrepreneurs.current_page - 1}&status=${status}&search=${search}`"
+              :href="paginationUrl(entrepreneurs.current_page - 1)"
               class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
             >
               上一页
@@ -142,7 +187,7 @@
             <span class="text-sm text-gray-400">第 {{ entrepreneurs.current_page }} / {{ entrepreneurs.last_page }} 页</span>
             <Link
               v-if="entrepreneurs.current_page < entrepreneurs.last_page"
-              :href="`/admin/entrepreneurs?page=${entrepreneurs.current_page + 1}&status=${status}&search=${search}`"
+              :href="paginationUrl(entrepreneurs.current_page + 1)"
               class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
             >
               下一页
@@ -156,7 +201,7 @@
 
 <script setup>
 import { Link } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
@@ -166,15 +211,57 @@ const props = defineProps({
 
 const search = ref(props.filters.search || '')
 const status = ref(props.filters.status || '')
+const selectedIds = ref([])
 
 const statusText = (s) => ({ pending: '待审核', approved: '已通过', rejected: '已拒绝' }[s] || s)
 const formatDate = (d) => new Date(d).toLocaleDateString('zh-CN')
 
+const paginationUrl = (page) => `/admin/entrepreneurs?page=${page}&search=${search.value}&status=${status.value}`
+
+const isAllPendingSelected = computed(() => {
+  const pendingIds = props.entrepreneurs.data
+    .filter(e => e.status === 'pending')
+    .map(e => e.id)
+  return pendingIds.length > 0 && pendingIds.every(id => selectedIds.value.includes(id))
+})
+
+const selectedPending = computed(() =>
+  props.entrepreneurs.data.filter(e => e.status === 'pending' && selectedIds.value.includes(e.id))
+)
+
+const toggleSelectAll = (e) => {
+  const pendingIds = props.entrepreneurs.data
+    .filter(em => em.status === 'pending')
+    .map(em => em.id)
+  if (e.target.checked) {
+    selectedIds.value = [...new Set([...selectedIds.value, ...pendingIds])]
+  } else {
+    selectedIds.value = selectedIds.value.filter(id => !pendingIds.includes(id))
+  }
+}
+
 const doSearch = () => router.get(`/admin/entrepreneurs?search=${search.value}&status=${status.value}`)
+
+const resetFilters = () => {
+  search.value = ''
+  status.value = ''
+  router.get('/admin/entrepreneurs')
+}
 
 const approve = (id) => router.post(`/admin/entrepreneurs/${id}/approve`)
 const reject = (id) => router.post(`/admin/entrepreneurs/${id}/reject`)
 const toggleFeatured = (id) => router.post(`/admin/entrepreneurs/${id}/toggle-featured`)
+
+const batchApprove = () => {
+  selectedIds.value.forEach(id => router.post(`/admin/entrepreneurs/${id}/approve`))
+  selectedIds.value = []
+}
+
+const batchReject = () => {
+  selectedIds.value.forEach(id => router.post(`/admin/entrepreneurs/${id}/reject`))
+  selectedIds.value = []
+}
+
 const destroy = (id) => {
   if (confirm('确定要删除这条记录吗？')) {
     router.delete(`/admin/entrepreneurs/${id}`)

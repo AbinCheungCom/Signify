@@ -17,7 +17,14 @@ class AdminMiddleware
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
-            return redirect('/')->with('error', '您没有管理员权限');
+
+            if ($request->user()) {
+                // 已登录但非管理员 → 返回首页并提示
+                return redirect('/')->with('error', '您没有管理员权限');
+            }
+
+            // 未登录 → 跳转登录页
+            return redirect()->route('login');
         }
 
         return $next($request);

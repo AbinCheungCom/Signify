@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Str;
+use PDO;
+use PDOException;
 
 class SetupController extends Controller
 {
@@ -35,7 +36,7 @@ class SetupController extends Controller
     }
 
     /**
-     * 测试数据库连接
+     * 测试数据库连接 + 自动建库
      */
     public function testDb(Request $request)
     {
@@ -46,21 +47,19 @@ class SetupController extends Controller
         $password = $request->input('password', '');
 
         try {
-            config([
-                'database.connections.mysql_test' => [
-                    'driver' => 'mysql',
-                    'host' => $host,
-                    'port' => $port,
-                    'database' => $database,
-                    'username' => $username,
-                    'password' => $password,
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                ]
-            ]);
-            DB::connection('mysql_test')->getPdo();
+            // 先连接 MySQL 服务器（不指定数据库）
+            $dsn = "mysql:host={$host};port={$port};charset=utf8mb4";
+            $pdo = new PDO($dsn, $username, $password);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // 创建数据库（如果不存在）
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+            // 重新连接指定数据库验证
+            $pdo->exec("USE `{$database}`");
+
             return response()->json(['success' => true, 'message' => '数据库连接成功']);
-        } catch (\Exception $e) {
+        } catch (PDOException $e) {
             return response()->json(['success' => false, 'message' => '连接失败: ' . $e->getMessage()], 400);
         }
     }
@@ -73,30 +72,48 @@ class SetupController extends Controller
         $data = $request->validate([
             'host' => 'required',
             'port' => 'required|numeric',
-            'database' => 'required',
+            'database' => 'required|string|regex:/^[a-zA-Z0-9_]+$/',
             'username' => 'required',
             'password' => '',
-            'app_name' => 'required',
+            'app_name' => 'required|string|max:50',
             'admin_email' => 'required|email',
-            'admin_password' => 'required|min:6',
+            'admin_password' => 'required|min:8',
         ]);
 
         try {
-            // 配置数据库连接
+            // 1. 备份现有 .env（如有）
+            $this->backupEnvFile();
+
+            // 2. 写入 .env 配置
             $this->writeEnvFile($data);
 
-            // 运行迁移
+            // 3. 运行迁移
             Artisan::call('migrate', ['--force' => true]);
 
-            // 创建管理员
+            // 4. 创建管理员账号
             $this->createAdmin($data);
 
-            // 创建存储链接
+            // 5. 创建存储链接
             Artisan::call('storage:link', ['--force' => true]);
+
+            // 6. 清除缓存
+            Artisan::call('config:clear');
 
             return response()->json(['success' => true, 'message' => '安装成功']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => '安装失败: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * 备份现有 .env 文件
+     */
+    private function backupEnvFile()
+    {
+        $envFile = base_path('.env');
+        if (file_exists($envFile)) {
+            $backupFile = base_path('.env.backup.' . date('Ymd_His'));
+            copy($envFile, $backupFile);
         }
     }
 
@@ -105,27 +122,30 @@ class SetupController extends Controller
      */
     private function writeEnvFile($data)
     {
+        $appKey = $this->generateAppKey();
+        $escapedPassword = addslashes($data['password']);
+
         $envContent = <<<ENV
 APP_NAME="{$data['app_name']}"
-APP_ENV=local
-APP_KEY=base64:{$this->generateAppKey()}
-APP_DEBUG=true
+APP_ENV=production
+APP_KEY={$appKey}
+APP_DEBUG=false
 APP_URL=http://localhost
 
 LOG_CHANNEL=stack
 LOG_DEPRECATIONS_CHANNEL=null
-LOG_LEVEL=debug
+LOG_LEVEL=info
 
 DB_CONNECTION=mysql
 DB_HOST={$data['host']}
 DB_PORT={$data['port']}
 DB_DATABASE={$data['database']}
 DB_USERNAME={$data['username']}
-DB_PASSWORD={$data['password']}
+DB_PASSWORD="{$escapedPassword}"
 
 BROADCAST_DRIVER=log
 CACHE_DRIVER=file
-FILESYSTEM_DISK=local
+FILESYSTEM_DISK=public
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
@@ -137,9 +157,10 @@ ENV;
     /**
      * 生成 App Key
      */
-    private function generateAppKey()
+    private function generateAppKey(): string
     {
-        return base64_encode(random_bytes(32));
+        $key = bin2hex(random_bytes(32));
+        return 'base64:' . base64_encode(hex2bin($key));
     }
 
     /**
@@ -152,6 +173,7 @@ ENV;
             'email' => $data['admin_email'],
             'password' => Hash::make($data['admin_password']),
             'is_admin' => true,
+            'email_verified_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -160,7 +182,7 @@ ENV;
     /**
      * 获取当前环境变量
      */
-    private function getCurrentEnv()
+    private function getCurrentEnv(): array
     {
         return [
             'APP_NAME' => env('APP_NAME', 'Signify'),

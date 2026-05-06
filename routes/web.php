@@ -34,6 +34,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/entrepreneurs', [AdminController::class, 'entrepreneurs'])->name('entrepreneurs');
+    Route::post('/entrepreneurs/batch-approve', [AdminController::class, 'batchApprove'])->name('batch-approve');
+    Route::post('/entrepreneurs/batch-reject', [AdminController::class, 'batchReject'])->name('batch-reject');
     Route::post('/entrepreneurs/{entrepreneur}/approve', [AdminController::class, 'approve'])->name('approve');
     Route::post('/entrepreneurs/{entrepreneur}/reject', [AdminController::class, 'reject'])->name('reject');
     Route::post('/entrepreneurs/{entrepreneur}/toggle-featured', [AdminController::class, 'toggleFeatured'])->name('toggle-featured');

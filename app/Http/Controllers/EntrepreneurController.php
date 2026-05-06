@@ -41,7 +41,6 @@ class EntrepreneurController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        // 获取筛选项的唯一值
         $industries = Entrepreneur::approved()->pluck('industry')->filter()->unique()->sort()->values();
         $cities = Entrepreneur::approved()->pluck('city')->filter()->unique()->sort()->values();
 
@@ -58,7 +57,6 @@ class EntrepreneurController extends Controller
      */
     public function show(Entrepreneur $entrepreneur)
     {
-        // 仅展示已认证的企业家详情
         if ($entrepreneur->status !== Entrepreneur::STATUS_APPROVED) {
             abort(403, '该企业家档案尚未认证');
         }

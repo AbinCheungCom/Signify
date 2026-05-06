@@ -90,4 +90,38 @@ class AdminController extends Controller
 
         return redirect()->route('admin.entrepreneurs')->with('success', "已删除 {$name}");
     }
+
+    /**
+     * 批量审批通过
+     */
+    public function batchApprove(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return redirect()->back()->with('error', '请选择要操作的企业家');
+        }
+
+        $count = Entrepreneur::whereIn('id', $ids)
+            ->where('status', Entrepreneur::STATUS_PENDING)
+            ->update(['status' => Entrepreneur::STATUS_APPROVED]);
+
+        return redirect()->back()->with('success', "已批量通过 {$count} 条申请");
+    }
+
+    /**
+     * 批量拒绝
+     */
+    public function batchReject(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return redirect()->back()->with('error', '请选择要操作的企业家');
+        }
+
+        $count = Entrepreneur::whereIn('id', $ids)
+            ->where('status', Entrepreneur::STATUS_PENDING)
+            ->update(['status' => Entrepreneur::STATUS_REJECTED]);
+
+        return redirect()->back()->with('success', "已批量拒绝 {$count} 条申请");
+    }
 }
