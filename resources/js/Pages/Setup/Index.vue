@@ -1,178 +1,116 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
-    <div class="max-w-xl w-full">
-      <!-- Logo -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-indigo-600">Signify</h1>
-        <p class="text-gray-600 mt-2">企业家形象资产数字化系统 - 安装向导</p>
-      </div>
+  <div class="font-sans antialiased min-h-screen bg-white">
+    <!-- Header -->
+    <div class="pt-20 pb-12 text-center">
+      <h1 class="text-4xl font-medium text-gray-900 tracking-tight">Signify</h1>
+      <p class="text-gray-500 mt-3">企业家形象资产数字化系统 · 安装向导</p>
+    </div>
 
-      <!-- 状态提示 -->
-      <div v-if="installed" class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-        <div class="flex items-center">
-          <div class="text-green-500 text-2xl mr-4">✓</div>
-          <div>
-            <h3 class="font-semibold text-green-800">系统已安装</h3>
-            <p class="text-green-700 text-sm mt-1">Signify 已完成配置，您可以开始使用。</p>
-          </div>
-        </div>
-        <div class="mt-4 flex space-x-4">
-          <Link href="/" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+    <!-- Installed State -->
+    <div v-if="installed" class="max-w-md mx-auto px-8 mb-20">
+      <div class="bg-[#F4F4F4] p-8 text-center">
+        <div class="text-3xl mb-4">✓</div>
+        <h2 class="text-xl font-medium text-gray-900 mb-2">系统已安装</h2>
+        <p class="text-gray-500 text-sm">Signify 已完成配置，开始使用吧。</p>
+        <div class="mt-8 flex justify-center space-x-4">
+          <Link href="/" class="px-6 py-3 bg-[#3E6AE1] text-white text-sm font-medium rounded hover:bg-[#3558c4] transition-colors duration-300">
             访问首页
           </Link>
-          <Link href="/login" class="px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50">
-            登录后台
+          <Link href="/login" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded hover:bg-gray-50 transition-colors duration-300">
+            登录
           </Link>
         </div>
       </div>
+    </div>
 
-      <!-- 安装表单 -->
-      <div v-else class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b">
-          <h2 class="text-lg font-semibold text-gray-900">数据库配置</h2>
-        </div>
+    <!-- Installation Form -->
+    <div v-else class="max-w-md mx-auto px-8 mb-20">
+      <div class="border border-[#EEEEEE]">
+        <!-- Database Section -->
+        <div class="p-8 border-b border-[#EEEEEE]">
+          <h2 class="text-sm font-medium text-gray-900 mb-6">数据库连接</h2>
 
-        <form @submit.prevent="submit" class="p-6 space-y-4">
-          <!-- 数据库配置 -->
-          <div class="border-b pb-4 mb-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">数据库连接</h3>
-
+          <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">主机</label>
-                <input
-                  v-model="form.host"
-                  type="text"
-                  required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="127.0.0.1"
-                />
+                <label class="block text-xs text-gray-500 mb-2">主机</label>
+                <input v-model="form.host" type="text" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="127.0.0.1" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">端口</label>
-                <input
-                  v-model="form.port"
-                  type="number"
-                  required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="3306"
-                />
+                <label class="block text-xs text-gray-500 mb-2">端口</label>
+                <input v-model="form.port" type="number" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="3306" />
               </div>
-            </div>
-
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">数据库名</label>
-              <input
-                v-model="form.database"
-                type="text"
-                required
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="signify"
-              />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
-                <input
-                  v-model="form.username"
-                  type="text"
-                  required
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="root"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-                <input
-                  v-model="form.password"
-                  type="password"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="可选"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              @click="testDb"
-              :disabled="testingDb"
-              class="mt-3 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-            >
-              {{ testingDb ? '测试中...' : '测试连接' }}
-            </button>
-
-            <div v-if="dbTestResult !== null" class="mt-2 text-sm" :class="dbTestResult ? 'text-green-600' : 'text-red-600'">
-              {{ dbTestMessage }}
-            </div>
-          </div>
-
-          <!-- 系统配置 -->
-          <div>
-            <h3 class="text-sm font-medium text-gray-700 mb-3">系统信息</h3>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">网站名称</label>
-              <input
-                v-model="form.app_name"
-                type="text"
-                required
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Signify"
-              />
-            </div>
-          </div>
-
-          <!-- 管理员账号 -->
-          <div>
-            <h3 class="text-sm font-medium text-gray-700 mb-3">管理员账号</h3>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">管理员邮箱</label>
-              <input
-                v-model="form.admin_email"
-                type="email"
-                required
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="admin@example.com"
-              />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">管理员密码</label>
-              <input
-                v-model="form.admin_password"
-                type="password"
-                required
-                minlength="6"
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="至少6位"
-              />
+              <label class="block text-xs text-gray-500 mb-2">数据库名</label>
+              <input v-model="form.database" type="text" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="signify" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-2">用户名</label>
+                <input v-model="form.username" type="text" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="root" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-2">密码</label>
+                <input v-model="form.password" type="password" class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="可选" />
+              </div>
+            </div>
+
+            <button type="button" @click="testDb" :disabled="testingDb" class="px-4 py-2 border border-[#EEEEEE] text-sm text-gray-500 rounded hover:bg-[#F4F4F4] transition-colors duration-300 disabled:opacity-50">
+              {{ testingDb ? '测试中...' : '测试连接' }}
+            </button>
+
+            <div v-if="dbTestResult !== null" class="text-sm" :class="dbTestResult ? 'text-green-600' : 'text-red-600'">
+              {{ dbTestMessage }}
             </div>
           </div>
+        </div>
 
-          <!-- 错误提示 -->
-          <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-md">
+        <!-- System Section -->
+        <div class="p-8 border-b border-[#EEEEEE]">
+          <h2 class="text-sm font-medium text-gray-900 mb-6">系统信息</h2>
+          <div>
+            <label class="block text-xs text-gray-500 mb-2">网站名称</label>
+            <input v-model="form.app_name" type="text" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="Signify" />
+          </div>
+        </div>
+
+        <!-- Admin Section -->
+        <div class="p-8">
+          <h2 class="text-sm font-medium text-gray-900 mb-6">管理员账号</h2>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-gray-500 mb-2">管理员邮箱</label>
+              <input v-model="form.admin_email" type="email" required class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="admin@example.com" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-2">管理员密码</label>
+              <input v-model="form.admin_password" type="password" required minlength="6" class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="至少6位" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div v-if="error" class="px-8 pb-6">
+          <div class="p-4 bg-red-50 border-l-4 border-red-500">
             <p class="text-red-700 text-sm">{{ error }}</p>
           </div>
+        </div>
 
-          <!-- 提交 -->
-          <div class="pt-4">
-            <button
-              type="submit"
-              :disabled="installing"
-              class="w-full px-4 py-3 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {{ installing ? '安装中...' : '开始安装' }}
-            </button>
-          </div>
-        </form>
+        <!-- Submit -->
+        <div class="px-8 pb-8">
+          <button type="submit" @click="submit" :disabled="installing" class="w-full px-6 py-4 bg-[#3E6AE1] text-white font-medium rounded hover:bg-[#3558c4] transition-colors duration-300 disabled:opacity-50">
+            {{ installing ? '安装中...' : '开始安装' }}
+          </button>
+        </div>
       </div>
+    </div>
 
-      <!-- 页脚 -->
-      <div class="text-center mt-6 text-sm text-gray-500">
-        Signify v1.0 - 企业家形象资产数字化系统
-      </div>
+    <!-- Footer -->
+    <div class="text-center pb-12 text-sm text-gray-400">
+      Signify v1.0
     </div>
   </div>
 </template>
@@ -180,7 +118,6 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
   dbConnected: Boolean,
@@ -208,18 +145,11 @@ const error = ref('')
 const testDb = async () => {
   testingDb.value = true
   dbTestResult.value = null
-
   try {
     const res = await fetch('/setup/test-db', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrf() },
-      body: JSON.stringify({
-        host: form.host,
-        port: form.port,
-        database: form.database,
-        username: form.username,
-        password: form.password,
-      })
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
+      body: JSON.stringify({ host: form.host, port: form.port, database: form.database, username: form.username, password: form.password })
     })
     const data = await res.json()
     dbTestResult.value = data.success
@@ -235,15 +165,13 @@ const testDb = async () => {
 const submit = async () => {
   installing.value = true
   error.value = ''
-
   try {
     const res = await fetch('/setup/install', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrf() },
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
       body: JSON.stringify(form)
     })
     const data = await res.json()
-
     if (data.success) {
       router.visit('/')
     } else {
@@ -254,9 +182,5 @@ const submit = async () => {
   } finally {
     installing.value = false
   }
-}
-
-const getCsrf = () => {
-  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
 }
 </script>

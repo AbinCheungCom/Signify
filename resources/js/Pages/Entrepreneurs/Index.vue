@@ -1,134 +1,127 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 导航栏 -->
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <Link href="/" class="text-xl font-bold text-gray-900">Signify</Link>
-          </div>
-          <div class="flex items-center space-x-4">
-            <Link href="/entrepreneurs" class="text-indigo-600 font-medium">企业家库</Link>
-            <Link v-if="$page.props.auth.user" href="/my/profile" class="text-gray-600 hover:text-gray-900">个人中心</Link>
-            <template v-else>
-              <Link href="/login" class="text-gray-600 hover:text-gray-900">登录</Link>
-            </template>
-          </div>
+  <div class="font-sans antialiased">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/75 backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
+        <Link href="/" class="text-xl font-medium tracking-tight text-gray-900">Signify</Link>
+        <div class="flex items-center space-x-8">
+          <Link href="/entrepreneurs" class="text-sm font-medium text-[#3E6AE1]">企业家库</Link>
+          <template v-if="$page.props.auth.user">
+            <Link href="/my/profile" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-300">个人中心</Link>
+          </template>
+          <template v-else>
+            <Link href="/login" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-300">登录</Link>
+          </template>
         </div>
       </div>
     </nav>
 
-    <!-- 主内容 -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">企业家库</h1>
-      </div>
+    <!-- Main Content -->
+    <div class="pt-24 pb-16 bg-[#F4F4F4] min-h-screen">
+      <div class="max-w-7xl mx-auto px-8">
+        <div class="mb-12">
+          <h1 class="text-4xl font-medium text-gray-900 tracking-tight">企业家库</h1>
+          <p class="text-gray-500 mt-2">探索优秀企业家的形象档案</p>
+        </div>
 
-      <!-- 搜索与筛选 -->
-      <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="md:col-span-2">
-            <input
-              v-model="search"
-              type="text"
-              placeholder="搜索姓名、行业..."
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              @keydown.enter="filter"
-            />
-          </div>
+        <!-- Filters -->
+        <div class="bg-white p-4 mb-8 flex items-center space-x-4">
+          <input
+            v-model="search"
+            type="text"
+            placeholder="搜索姓名、行业..."
+            class="flex-1 px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20"
+            @keydown.enter="filter"
+          />
           <select
             v-model="selectedIndustry"
-            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            class="px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none"
           >
             <option value="">全部行业</option>
-            <option v-for="industry in industries" :key="industry" :value="industry">
-              {{ industry }}
-            </option>
+            <option v-for="industry in industries" :key="industry" :value="industry">{{ industry }}</option>
           </select>
           <select
             v-model="selectedCity"
-            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            class="px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none"
           >
             <option value="">全部城市</option>
-            <option v-for="city in cities" :key="city" :value="city">
-              {{ city }}
-            </option>
+            <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
           </select>
-        </div>
-        <div class="mt-4 flex justify-between items-center">
           <button
             @click="filter"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            class="px-6 py-3 bg-[#3E6AE1] text-white text-sm font-medium rounded hover:bg-[#3558c4] transition-colors duration-300"
           >
             筛选
           </button>
-          <span class="text-sm text-gray-500">
-            共 {{ entrepreneurs.total }} 位企业家
-          </span>
         </div>
-      </div>
 
-      <!-- 列表 -->
-      <div v-if="entrepreneurs.data.length === 0" class="text-center py-12 text-gray-500">
-        暂无符合条件的记录
-      </div>
+        <!-- Count -->
+        <div class="text-sm text-gray-400 mb-6">共 {{ entrepreneurs.total }} 位企业家</div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="entrepreneur in entrepreneurs.data"
-          :key="entrepreneur.id"
-          class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
-        >
-          <Link :href="`/entrepreneurs/${entrepreneur.id}`" class="block">
-            <div class="aspect-square bg-gray-200 relative">
+        <!-- Grid -->
+        <div v-if="entrepreneurs.data.length === 0" class="text-center py-24 text-gray-400">
+          暂无符合条件的记录
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Link
+            v-for="entrepreneur in entrepreneurs.data"
+            :key="entrepreneur.id"
+            :href="`/entrepreneurs/${entrepreneur.id}`"
+            class="group block bg-white"
+          >
+            <div class="aspect-square bg-gray-100 overflow-hidden relative">
               <img
                 v-if="entrepreneur.avatar"
                 :src="`/storage/${entrepreneur.avatar}`"
                 :alt="entrepreneur.name"
                 class="w-full h-full object-cover"
               />
-              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-4xl font-bold">
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-6xl font-light">
                 {{ entrepreneur.name.charAt(0) }}
               </div>
               <span
                 v-if="entrepreneur.is_featured"
-                class="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded"
+                class="absolute top-4 right-4 px-2 py-1 bg-[#171A20] text-white text-xs"
               >
                 推荐
               </span>
             </div>
-            <div class="p-4">
-              <h4 class="text-lg font-semibold text-gray-900">{{ entrepreneur.name }}</h4>
-              <p class="text-sm text-gray-600 mt-1">{{ entrepreneur.industry }} · {{ entrepreneur.city }}</p>
-              <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{ entrepreneur.bio }}</p>
+            <div class="p-6">
+              <h3 class="text-lg font-medium text-gray-900">{{ entrepreneur.name }}</h3>
+              <p class="text-sm text-gray-500 mt-1">{{ entrepreneur.industry }} · {{ entrepreneur.city }}</p>
+              <p v-if="entrepreneur.bio" class="text-sm text-gray-400 mt-3 line-clamp-2">{{ entrepreneur.bio }}</p>
             </div>
           </Link>
         </div>
-      </div>
 
-      <!-- 分页 -->
-      <div v-if="entrepreneurs.last_page > 1" class="mt-6 flex justify-center">
-        <div class="flex space-x-2">
+        <!-- Pagination -->
+        <div v-if="entrepreneurs.last_page > 1" class="mt-16 flex justify-center items-center space-x-4">
           <Link
             v-if="entrepreneurs.current_page > 1"
             :href="`/entrepreneurs?page=${entrepreneurs.current_page - 1}&search=${search}&industry=${selectedIndustry}&city=${selectedCity}`"
-            class="px-3 py-1 rounded border hover:bg-gray-50"
+            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-300"
           >
             上一页
           </Link>
-          <span class="px-3 py-1">
-            第 {{ entrepreneurs.current_page }} / {{ entrepreneurs.last_page }} 页
-          </span>
+          <span class="text-sm text-gray-400">第 {{ entrepreneurs.current_page }} / {{ entrepreneurs.last_page }} 页</span>
           <Link
             v-if="entrepreneurs.current_page < entrepreneurs.last_page"
             :href="`/entrepreneurs?page=${entrepreneurs.current_page + 1}&search=${search}&industry=${selectedIndustry}&city=${selectedCity}`"
-            class="px-3 py-1 rounded border hover:bg-gray-50"
+            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-300"
           >
             下一页
           </Link>
         </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-white border-t border-[#EEEEEE]">
+      <div class="max-w-7xl mx-auto px-8 text-center">
+        <p class="text-sm text-gray-400">Signify · 企业家形象资产数字化系统</p>
+      </div>
+    </footer>
   </div>
 </template>
 
