@@ -31,7 +31,7 @@ class EntrepreneurPolicy
      */
     public function delete(User $user, Entrepreneur $entrepreneur): bool
     {
-        return $user->id === $entrepreneur->user_id;
+        return $user->id === $entrepreneur->user_id || $user->is_admin;
     }
 
     /**
@@ -40,6 +40,14 @@ class EntrepreneurPolicy
      */
     public function approve(User $user, Entrepreneur $entrepreneur): bool
     {
-        return $user->is_admin ?? false;
+        return $user->is_admin;
+    }
+
+    /**
+     * 用户是否可以管理（管理员操作）
+     */
+    public function manage(User $user): bool
+    {
+        return $user->is_admin;
     }
 }

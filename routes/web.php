@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EntrepreneurController;
 use App\Http\Controllers\MyProfileController;
+use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +24,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my/profile', [MyProfileController::class, 'show'])->name('profile.show');
     Route::patch('/my/profile', [MyProfileController::class, 'update'])->name('profile.update');
     Route::post('/my/profile', [MyProfileController::class, 'create'])->name('profile.create');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 管理员路由
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/entrepreneurs', [AdminController::class, 'entrepreneurs'])->name('entrepreneurs');
+    Route::post('/entrepreneurs/{entrepreneur}/approve', [AdminController::class, 'approve'])->name('approve');
+    Route::post('/entrepreneurs/{entrepreneur}/reject', [AdminController::class, 'reject'])->name('reject');
+    Route::post('/entrepreneurs/{entrepreneur}/toggle-featured', [AdminController::class, 'toggleFeatured'])->name('toggle-featured');
+    Route::delete('/entrepreneurs/{entrepreneur}', [AdminController::class, 'destroy'])->name('destroy');
 });
 
 require __DIR__.'/auth.php';
