@@ -4,18 +4,20 @@
 
 ---
 
-## ⚡ 一键部署（宝塔面板）
+## ⚡ 一键部署（传统服务器 / 宝塔面板）
 
-### 环境要求
+### 环境要求（传统服务器）
 
-| 项目 | 版本要求 |
-|------|----------|
-| PHP | 8.2+（推荐编译安装） |
-| MySQL | 8.0+ |
-| Nginx | 最新版 |
-| 宝塔面板 | 正式版 |
+| 项目 | 版本要求 | 说明 |
+|------|----------|------|
+| **PHP** | 8.0+ | 推荐 8.1（性能更好） |
+| **MySQL** | 5.7+ | 需 InnoDB 引擎支持 |
+| **Nginx** | 1.28+ | 或 Apache 2.4+ |
+| **phpMyAdmin** | 5.0+ | 数据库管理（可选） |
 
-**PHP 扩展（必须）：** `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `curl`
+**PHP 扩展（必须）：** `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `curl`, `gd`
+
+> ⚠️ **重要：** MySQL 5.7 不支持 Laravel 11 默认的 enum 类型，项目已改用 `string` 类型替代，迁移文件完全兼容。
 
 ### 部署步骤
 
@@ -25,8 +27,8 @@
 2. 配置：
    - **域名**：填写你的域名或IP
    - **根目录**：`/www/wwwroot/signify`
-   - **PHP版本**：选择 **8.2**
-   - **创建数据库**：✅ 勾选，MySQL 版本选 **8.0**，设置数据库名/用户/密码
+   - **PHP版本**：选择 **8.0** 或 **8.1**
+   - **创建数据库**：✅ 勾选，MySQL 版本选 **5.7**，设置数据库名/用户/密码
 
 #### 第二步：上传代码
 
@@ -79,7 +81,7 @@ php artisan key:generate
 # 创建存储链接
 php artisan storage:link
 
-# 运行数据库迁移
+# 运行数据库迁移（兼容 MySQL 5.7）
 php artisan migrate --force
 
 # 清除缓存
@@ -111,7 +113,6 @@ server {
     # 安全响应头
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
 
     # 请求日志
     access_log /www/wwwroot/signify/storage/logs/access.log;
@@ -126,9 +127,14 @@ server {
         log_not_found off;
     }
 
-    # PHP-FPM（宝塔默认路径）
+    # PHP-FPM（传统服务器配置）
+    # 常见路径：/tmp/php-cgi.sock 或 127.0.0.1:9000
+    # 请根据服务器实际情况选择正确的连接方式
     location ~ \.php$ {
-        fastcgi_pass unix:/tmp/php-cgi-82.sock;
+        fastcgi_pass unix:/tmp/php-cgi.sock;
+        # 如使用 TCP 连接，取消下面两行注释:
+        # fastcgi_pass 127.0.0.1:9000;
+        # fastcgi_keep_conn on;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
@@ -136,22 +142,23 @@ server {
     }
 
     # 静态资源缓存
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public";
     }
 
     # 禁止访问敏感文件
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-
     location ~ /\.env {
         deny all;
     }
 
-    # Gzip 压缩
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Gzip 压缩（低配服务器建议开启）
     gzip on;
+    gzip_vary on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
 }
 ```
@@ -203,9 +210,8 @@ php artisan tinker
 | **防越权** | 路由模型绑定替换为显式 `approved()` 查询 |
 | **头像安全** | MIME 验证 + 扩展名白名单 + 安全文件名 |
 | **管理员授权** | 中间件 + Policy 双重保护 |
-| **敏感文件** | Nginx 禁止访问 `.env` / `.env.backup` |
-| **安全响应头** | `X-Frame-Options` / `X-Content-Type-Options` / `X-XSS-Protection` |
-| **生产调试** | `APP_DEBUG=false` + `APP_ENV=production` 强制 |
+| **敏感文件** | Nginx 禁止访问 `.env` |
+| **生产模式** | `APP_DEBUG=false` + `APP_ENV=production` |
 
 ---
 
@@ -236,12 +242,12 @@ docker-compose up -d
 
 | 层级 | 技术 |
 |------|------|
-| 后端框架 | Laravel 11 |
+| 后端框架 | Laravel 11（PHP 8.0+） |
 | 前端框架 | Vue 3 + Inertia.js |
 | 样式 | Tailwind CSS (Tesla 风格) |
-| 数据库 | MySQL 8.0 |
+| 数据库 | MySQL 5.7+（兼容 enum 替代方案） |
 | 认证 | Laravel Breeze |
-| PHP 版本 | 8.2+ |
+| 服务器 | Nginx 1.28+ / Apache 2.4+ |
 
 ---
 
@@ -269,11 +275,11 @@ Signify/
 │   └── Middleware/           # 中间件
 ├── config/                   # Laravel 配置
 ├── database/
-│   ├── migrations/           # 数据库迁移
+│   ├── migrations/           # 数据库迁移（兼容 MySQL 5.7）
 │   ├── factories/            # 测试工厂
 │   └── seeders/              # 管理员种子
 ├── deploy/
-│   ├── nginx.conf            # Nginx 配置模板
+│   ├── nginx.conf            # Nginx 配置模板（传统服务器）
 │   └── 宝塔面板部署教程.md    # 详细部署文档
 ├── resources/js/
 │   └── Pages/                # Inertia 页面组件
