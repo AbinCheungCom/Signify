@@ -52,8 +52,9 @@ class SetupController extends Controller
             $pdo = new PDO($dsn, $username, $password);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // 创建数据库（如果不存在）
-            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            // P1修复：强制字符集 + 反引号包裹数据库名，防止特殊字符问题
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database`
+                ` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
             // 重新连接指定数据库验证
             $pdo->exec("USE `{$database}`");
@@ -76,6 +77,7 @@ class SetupController extends Controller
             'username' => 'required',
             'password' => '',
             'app_name' => 'required|string|max:50',
+            'app_url' => 'required|url',
             'admin_email' => 'required|email',
             'admin_password' => 'required|min:8',
         ]);
@@ -94,7 +96,12 @@ class SetupController extends Controller
             $this->createAdmin($data);
 
             // 5. 创建存储链接
-            Artisan::call('storage:link', ['--force' => true]);
+            try {
+                Artisan::call('storage:link', ['--force' => true]);
+            } catch (\Exception $e) {
+                // storage:link 失败不影响主流程，但记录提示用户
+                \Log::warning('storage:link failed: ' . $e->getMessage());
+            }
 
             // 6. 清除缓存
             Artisan::call('config:clear');
@@ -125,12 +132,15 @@ class SetupController extends Controller
         $appKey = $this->generateAppKey();
         $escapedPassword = addslashes($data['password']);
 
+        // P1修复：使用用户填写的 APP_URL，不再硬编码 http://localhost
+        $appUrl = rtrim($data['app_url'], '/');
+
         $envContent = <<<ENV
 APP_NAME="{$data['app_name']}"
 APP_ENV=production
 APP_KEY={$appKey}
 APP_DEBUG=false
-APP_URL=http://localhost
+APP_URL={$appUrl}
 
 LOG_CHANNEL=stack
 LOG_DEPRECATIONS_CHANNEL=null
@@ -190,6 +200,7 @@ ENV;
             'DB_PORT' => env('DB_PORT', 3306),
             'DB_DATABASE' => env('DB_DATABASE', ''),
             'DB_USERNAME' => env('DB_USERNAME', 'root'),
+            'APP_URL' => env('APP_URL', ''),
         ];
     }
 }

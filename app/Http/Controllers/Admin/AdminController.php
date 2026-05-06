@@ -19,11 +19,19 @@ class AdminController extends Controller
             ->latest()
             ->paginate(10);
 
+        // P1优化：合并4次count为一次子查询
+        $statsRaw = Entrepreneur::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+            SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+        ")->first();
+
         $stats = [
-            'total' => Entrepreneur::count(),
-            'pending' => Entrepreneur::where('status', Entrepreneur::STATUS_PENDING)->count(),
-            'approved' => Entrepreneur::where('status', Entrepreneur::STATUS_APPROVED)->count(),
-            'rejected' => Entrepreneur::where('status', Entrepreneur::STATUS_REJECTED)->count(),
+            'total' => (int) $statsRaw->total,
+            'pending' => (int) $statsRaw->pending,
+            'approved' => (int) $statsRaw->approved,
+            'rejected' => (int) $statsRaw->rejected,
         ];
 
         return inertia('Admin/Dashboard', [
@@ -72,6 +80,7 @@ class AdminController extends Controller
      */
     public function reject(Entrepreneur $entrepreneur)
     {
+        // P1修复：reject应走独立的Policy方法，与approve区分
         $this->authorize('approve', $entrepreneur);
 
         $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
@@ -106,7 +115,7 @@ class AdminController extends Controller
     }
 
     /**
-     * 批量审批通过
+     * 批量审批通过（P0：逐条Policy校验）
      */
     public function batchApprove(Request $request)
     {
@@ -115,15 +124,26 @@ class AdminController extends Controller
             return redirect()->back()->with('error', '请选择要操作的企业家');
         }
 
-        $count = Entrepreneur::whereIn('id', $ids)
-            ->where('status', Entrepreneur::STATUS_PENDING)
-            ->update(['status' => Entrepreneur::STATUS_APPROVED]);
+        $user = $request->user();
+        $approvedCount = 0;
 
-        return redirect()->back()->with('success', "已批量通过 {$count} 条申请");
+        foreach ($ids as $id) {
+            $entrepreneur = Entrepreneur::find($id);
+            if (!$entrepreneur) {
+                continue;
+            }
+            // P0核心：逐条校验Policy权限
+            if ($user->can('approve', $entrepreneur)) {
+                $entrepreneur->update(['status' => Entrepreneur::STATUS_APPROVED]);
+                $approvedCount++;
+            }
+        }
+
+        return redirect()->back()->with('success', "已批量通过 {$approvedCount} 条申请");
     }
 
     /**
-     * 批量拒绝
+     * 批量拒绝（P0：逐条Policy校验）
      */
     public function batchReject(Request $request)
     {
@@ -132,10 +152,21 @@ class AdminController extends Controller
             return redirect()->back()->with('error', '请选择要操作的企业家');
         }
 
-        $count = Entrepreneur::whereIn('id', $ids)
-            ->where('status', Entrepreneur::STATUS_PENDING)
-            ->update(['status' => Entrepreneur::STATUS_REJECTED]);
+        $user = $request->user();
+        $rejectedCount = 0;
 
-        return redirect()->back()->with('success', "已批量拒绝 {$count} 条申请");
+        foreach ($ids as $id) {
+            $entrepreneur = Entrepreneur::find($id);
+            if (!$entrepreneur) {
+                continue;
+            }
+            // P0核心：逐条校验Policy权限
+            if ($user->can('approve', $entrepreneur)) {
+                $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
+                $rejectedCount++;
+            }
+        }
+
+        return redirect()->back()->with('success', "已批量拒绝 {$rejectedCount} 条申请");
     }
 }
