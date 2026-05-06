@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Entrepreneur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -36,9 +37,14 @@ class AdminController extends Controller
      */
     public function entrepreneurs(Request $request)
     {
+        $search = $request->get('search');
+
         $entrepreneurs = Entrepreneur::with('user')
             ->when($request->status, fn($q, $s) => $q->where('status', $s))
-            ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($search, function ($q) use ($search) {
+                $escaped = addcslashes($search, '%_');
+                $q->where('name', 'like', "%{$escaped}%");
+            })
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -50,30 +56,36 @@ class AdminController extends Controller
     }
 
     /**
-     * 审批通过
+     * 审批通过（Policy验证）
      */
     public function approve(Entrepreneur $entrepreneur)
     {
+        $this->authorize('approve', $entrepreneur);
+
         $entrepreneur->update(['status' => Entrepreneur::STATUS_APPROVED]);
 
         return redirect()->back()->with('success', "已通过 {$entrepreneur->name} 的认证申请");
     }
 
     /**
-     * 审批拒绝
+     * 审批拒绝（Policy验证）
      */
     public function reject(Entrepreneur $entrepreneur)
     {
+        $this->authorize('approve', $entrepreneur);
+
         $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
 
         return redirect()->back()->with('success', "已拒绝 {$entrepreneur->name} 的认证申请");
     }
 
     /**
-     * 设为推荐 / 取消推荐
+     * 设为推荐 / 取消推荐（Policy验证）
      */
     public function toggleFeatured(Entrepreneur $entrepreneur)
     {
+        $this->authorize('approve', $entrepreneur);
+
         $entrepreneur->update(['is_featured' => !$entrepreneur->is_featured]);
 
         $status = $entrepreneur->is_featured ? '设为推荐' : '取消推荐';
@@ -81,10 +93,12 @@ class AdminController extends Controller
     }
 
     /**
-     * 删除企业家档案
+     * 删除企业家档案（Policy验证）
      */
     public function destroy(Entrepreneur $entrepreneur)
     {
+        $this->authorize('delete', $entrepreneur);
+
         $name = $entrepreneur->name;
         $entrepreneur->delete();
 

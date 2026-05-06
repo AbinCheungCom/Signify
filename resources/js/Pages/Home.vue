@@ -53,7 +53,7 @@
                 class="w-full h-full object-cover"
               />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-5xl font-light">
-                {{ entrepreneur.name.charAt(0) }}
+                {{ (entrepreneur.name || '?').charAt(0) }}
               </div>
             </div>
             <h3 class="text-lg font-medium text-gray-900">{{ entrepreneur.name }}</h3>

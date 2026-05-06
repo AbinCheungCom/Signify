@@ -65,7 +65,7 @@ class Entrepreneur extends Model
     }
 
     /**
-     * 作用域：搜索
+     * 作用域：搜索（防注入）
      */
     public function scopeSearch($query, ?string $search)
     {
@@ -73,10 +73,13 @@ class Entrepreneur extends Model
             return $query;
         }
 
-        return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('industry', 'like', "%{$search}%")
-              ->orWhere('city', 'like', "%{$search}%");
+        // 转义特殊字符防止 LIKE 注入
+        $escaped = addcslashes($search, '%_');
+
+        return $query->where(function ($q) use ($escaped) {
+            $q->where('name', 'like', "%{$escaped}%")
+              ->orWhere('industry', 'like', "%{$escaped}%")
+              ->orWhere('city', 'like', "%{$escaped}%");
         });
     }
 }

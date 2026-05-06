@@ -6,6 +6,7 @@ use App\Models\Entrepreneur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class MyProfileController extends Controller
 {
@@ -38,7 +39,13 @@ class MyProfileController extends Controller
 
         $data = $request->validate([
             'name' => 'sometimes|string|max:100',
-            'avatar' => 'sometimes|image|max:2048',
+            'avatar' => [
+                'sometimes',
+                'file',
+                'image',
+                'max:2048',
+                'mimes:jpg,jpeg,png,gif,webp',
+            ],
             'industry' => 'sometimes|string|max:100|nullable',
             'city' => 'sometimes|string|max:100|nullable',
             'bio' => 'sometimes|string|max:500|nullable',
@@ -48,14 +55,26 @@ class MyProfileController extends Controller
 
         // 处理头像上传
         if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+
+            // 验证文件扩展名（防止绕过 MIME 检测）
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($extension, $allowedExtensions)) {
+                return redirect()->back()->with('error', '头像仅支持 JPG/PNG/GIF/WEBP 格式');
+            }
+
             // 删除旧头像
             if ($entrepreneur->avatar) {
                 Storage::disk('public')->delete($entrepreneur->avatar);
             }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+
+            // 保存新头像（使用安全文件名）
+            $filename = time() . '_' . uniqid() . '.' . $extension;
+            $data['avatar'] = $file->storeAs('avatars', $filename, 'public');
         }
 
-        $entrepreneur->update($data);
+        $entrepreneur->update(array_filter($data, fn($v) => $v !== null));
 
         return redirect()->back()->with('success', '信息更新成功！');
     }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', [EntrepreneurController::class, 'home'])->name('home');
 Route::get('/entrepreneurs', [EntrepreneurController::class, 'index'])->name('entrepreneurs.index');
-Route::get('/entrepreneurs/{entrepreneur}', [EntrepreneurController::class, 'show'])->name('entrepreneurs.show');
+Route::get('/entrepreneurs/{id}', [EntrepreneurController::class, 'show'])->name('entrepreneurs.show')->whereNumber('id');
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 管理员路由
+| 管理员路由（中间件 + Policy 双重保护）
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

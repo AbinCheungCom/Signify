@@ -53,13 +53,14 @@ class EntrepreneurController extends Controller
     }
 
     /**
-     * 企业家详情
+     * 企业家详情（防路由模型绑定泄露）
      */
-    public function show(Entrepreneur $entrepreneur)
+    public function show(int $id)
     {
-        if ($entrepreneur->status !== Entrepreneur::STATUS_APPROVED) {
-            abort(403, '该企业家档案尚未认证');
-        }
+        // 显式查询替代隐式路由模型绑定，防止未认证数据泄露
+        $entrepreneur = Entrepreneur::where('id', $id)
+            ->approved()
+            ->firstOrFail();
 
         return inertia('Entrepreneurs/Show', [
             'entrepreneur' => $entrepreneur->load('user'),

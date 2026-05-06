@@ -78,7 +78,7 @@
                 class="w-full h-full object-cover"
               />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-6xl font-light">
-                {{ entrepreneur.name.charAt(0) }}
+                {{ (entrepreneur.name || '?').charAt(0) }}
               </div>
               <span
                 v-if="entrepreneur.is_featured"
