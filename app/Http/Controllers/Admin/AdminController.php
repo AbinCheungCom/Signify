@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Entrepreneur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -22,9 +23,9 @@ class AdminController extends Controller
         // P1优化：合并4次count为一次子查询
         $statsRaw = Entrepreneur::selectRaw("
             COUNT(*) as total,
-            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-            SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-            SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+            SUM(CASE WHEN status = '" . Entrepreneur::STATUS_PENDING . "' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = '" . Entrepreneur::STATUS_APPROVED . "' THEN 1 ELSE 0 END) as approved,
+            SUM(CASE WHEN status = '" . Entrepreneur::STATUS_REJECTED . "' THEN 1 ELSE 0 END) as rejected
         ")->first();
 
         $stats = [
@@ -45,14 +46,9 @@ class AdminController extends Controller
      */
     public function entrepreneurs(Request $request)
     {
-        $search = $request->get('search');
-
         $entrepreneurs = Entrepreneur::with('user')
             ->when($request->status, fn($q, $s) => $q->where('status', $s))
-            ->when($search, function ($q) use ($search) {
-                $escaped = addcslashes($search, '%_');
-                $q->where('name', 'like', "%{$escaped}%");
-            })
+            ->search($request->get('search'))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -80,8 +76,7 @@ class AdminController extends Controller
      */
     public function reject(Entrepreneur $entrepreneur)
     {
-        // P1修复：reject应走独立的Policy方法，与approve区分
-        $this->authorize('approve', $entrepreneur);
+        $this->authorize('reject', $entrepreneur);
 
         $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
 
@@ -93,7 +88,7 @@ class AdminController extends Controller
      */
     public function toggleFeatured(Entrepreneur $entrepreneur)
     {
-        $this->authorize('approve', $entrepreneur);
+        $this->authorize('toggleFeatured', $entrepreneur);
 
         $entrepreneur->update(['is_featured' => !$entrepreneur->is_featured]);
 
@@ -115,57 +110,55 @@ class AdminController extends Controller
     }
 
     /**
-     * 批量审批通过（P0：逐条Policy校验）
+     * 批量审批通过
      */
     public function batchApprove(Request $request)
     {
-        $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return redirect()->back()->with('error', '请选择要操作的企业家');
-        }
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
 
         $user = $request->user();
+
+        $entrepreneurs = Entrepreneur::whereIn('id', $validated['ids'])->get();
         $approvedCount = 0;
 
-        foreach ($ids as $id) {
-            $entrepreneur = Entrepreneur::find($id);
-            if (!$entrepreneur) {
-                continue;
+        DB::transaction(function () use ($entrepreneurs, $user, &$approvedCount) {
+            foreach ($entrepreneurs as $entrepreneur) {
+                if ($user->can('approve', $entrepreneur)) {
+                    $entrepreneur->update(['status' => Entrepreneur::STATUS_APPROVED]);
+                    $approvedCount++;
+                }
             }
-            // P0核心：逐条校验Policy权限
-            if ($user->can('approve', $entrepreneur)) {
-                $entrepreneur->update(['status' => Entrepreneur::STATUS_APPROVED]);
-                $approvedCount++;
-            }
-        }
+        });
 
         return redirect()->back()->with('success', "已批量通过 {$approvedCount} 条申请");
     }
 
     /**
-     * 批量拒绝（P0：逐条Policy校验）
+     * 批量拒绝
      */
     public function batchReject(Request $request)
     {
-        $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return redirect()->back()->with('error', '请选择要操作的企业家');
-        }
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
 
         $user = $request->user();
+
+        $entrepreneurs = Entrepreneur::whereIn('id', $validated['ids'])->get();
         $rejectedCount = 0;
 
-        foreach ($ids as $id) {
-            $entrepreneur = Entrepreneur::find($id);
-            if (!$entrepreneur) {
-                continue;
+        DB::transaction(function () use ($entrepreneurs, $user, &$rejectedCount) {
+            foreach ($entrepreneurs as $entrepreneur) {
+                if ($user->can('reject', $entrepreneur)) {
+                    $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
+                    $rejectedCount++;
+                }
             }
-            // P0核心：逐条校验Policy权限
-            if ($user->can('approve', $entrepreneur)) {
-                $entrepreneur->update(['status' => Entrepreneur::STATUS_REJECTED]);
-                $rejectedCount++;
-            }
-        }
+        });
 
         return redirect()->back()->with('success', "已批量拒绝 {$rejectedCount} 条申请");
     }

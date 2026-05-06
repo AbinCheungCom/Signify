@@ -40,7 +40,7 @@ class User extends Authenticatable
     /**
      * 获取关联的企业家档案
      */
-    public function entrepreneur()
+    public function entrepreneur(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Entrepreneur::class);
     }

@@ -20,9 +20,8 @@ class SetupController extends Controller
     {
         try {
             DB::connection()->getPdo();
-            $tables = DB::select("SHOW TABLES");
+            $installed = $this->isInstalled();
             $dbConnected = true;
-            $installed = count($tables) > 0 && in_array('users', array_map(fn($t) => array_values((array)$t)[0], $tables));
         } catch (\Exception $e) {
             $dbConnected = false;
             $installed = false;
@@ -40,11 +39,23 @@ class SetupController extends Controller
      */
     public function testDb(Request $request)
     {
-        $host = $request->input('host', '127.0.0.1');
-        $port = $request->input('port', 3306);
-        $database = $request->input('database');
-        $username = $request->input('username', 'root');
-        $password = $request->input('password', '');
+        if ($this->isInstalled()) {
+            return response()->json(['success' => false, 'message' => '系统已安装，请勿重复操作'], 403);
+        }
+
+        $data = $request->validate([
+            'host' => 'required|string|max:255',
+            'port' => 'required|numeric|min:1|max:65535',
+            'database' => 'required|string|regex:/^[a-zA-Z0-9_]{1,64}$/',
+            'username' => 'required|string|max:255',
+            'password' => 'nullable|string|max:255',
+        ]);
+
+        $host = $data['host'];
+        $port = (int) $data['port'];
+        $database = $data['database'];
+        $username = $data['username'];
+        $password = $data['password'];
 
         try {
             // 先连接 MySQL 服务器（不指定数据库）
@@ -70,16 +81,20 @@ class SetupController extends Controller
      */
     public function install(Request $request)
     {
+        if ($this->isInstalled()) {
+            return response()->json(['success' => false, 'message' => '系统已安装，请勿重复操作'], 403);
+        }
+
         $data = $request->validate([
             'host' => 'required',
             'port' => 'required|numeric',
             'database' => 'required|string|regex:/^[a-zA-Z0-9_]+$/',
             'username' => 'required',
-            'password' => '',
+            'password' => 'nullable|string',
             'app_name' => 'required|string|max:50',
             'app_url' => 'required|url',
             'admin_email' => 'required|email',
-            'admin_password' => 'required|min:8',
+            'admin_password' => 'required|min:8|confirmed',
         ]);
 
         try {
@@ -187,6 +202,18 @@ ENV;
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    /**
+     * 检查系统是否已安装
+     */
+    private function isInstalled(): bool
+    {
+        try {
+            return Schema::hasTable('users') && DB::table('users')->exists();
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**

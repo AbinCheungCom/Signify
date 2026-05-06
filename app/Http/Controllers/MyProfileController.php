@@ -92,6 +92,8 @@ class MyProfileController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:100',
+        ], [], [
+            'name' => '姓名',
         ]);
 
         $entrepreneur = Entrepreneur::create([

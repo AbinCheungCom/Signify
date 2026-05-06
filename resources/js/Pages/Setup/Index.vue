@@ -87,7 +87,11 @@
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-2">管理员密码</label>
-              <input v-model="form.admin_password" type="password" required minlength="6" class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="至少6位" />
+              <input v-model="form.admin_password" type="password" required minlength="8" class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="至少8位" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-2">确认管理员密码</label>
+              <input v-model="form.admin_password_confirmation" type="password" required minlength="8" class="w-full px-4 py-3 bg-[#F4F4F4] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6AE1]/20" placeholder="再次输入密码" />
             </div>
           </div>
         </div>
@@ -134,6 +138,7 @@ const form = reactive({
   app_name: props.env?.APP_NAME || 'Signify',
   admin_email: 'admin@signify.com',
   admin_password: '',
+  admin_password_confirmation: '',
 })
 
 const testingDb = ref(false)
