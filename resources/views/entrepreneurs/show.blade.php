@@ -2,6 +2,12 @@
 
 @section('title', $entrepreneur->name)
 
+{{-- 分享卡片：图片用该企业家上传的头像 --}}
+@section('og-title', $entrepreneur->name.' — SIGNIFY')
+@section('og-description', \Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: '每一份引领行业的商业远见，都值得被更广泛地看见'), 80))
+@section('og-url', route('entrepreneurs.show', $entrepreneur->id))
+@section('og-image', $entrepreneur->avatar ? url('storage/'.$entrepreneur->avatar) : asset('android-chrome-512x512.png'))
+
 @section('content')
 
 <div class="max-w-7xl mx-auto px-6 py-16">
