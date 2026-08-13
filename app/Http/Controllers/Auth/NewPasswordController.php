@@ -16,9 +16,9 @@ class NewPasswordController extends Controller
     /**
      * Display the password reset view.
      */
-    public function create(Request $request): \Inertia\Response
+    public function create(Request $request): \Illuminate\Contracts\View\View
     {
-        return inertia('Auth/ResetPassword', [
+        return view('auth.reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
         ]);

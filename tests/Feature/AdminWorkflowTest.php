@@ -36,7 +36,9 @@ class AdminWorkflowTest extends TestCase
 
         $response = $this->get('/admin/dashboard');
 
-        $response->assertStatus(403);
+        // AdminMiddleware 对已登录非管理员（非 JSON 请求）重定向首页并提示
+        $response->assertRedirect('/');
+        $response->assertSessionHas('error');
     }
 
     /**

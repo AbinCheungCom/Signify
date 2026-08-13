@@ -18,7 +18,7 @@ class EntrepreneurController extends Controller
             ->take(6)
             ->get();
 
-        return inertia('Home', [
+        return view('home', [
             'featuredEntrepreneurs' => $featuredEntrepreneurs,
         ]);
     }
@@ -44,7 +44,7 @@ class EntrepreneurController extends Controller
         $industries = Entrepreneur::approved()->pluck('industry')->filter()->unique()->sort()->values();
         $cities = Entrepreneur::approved()->pluck('city')->filter()->unique()->sort()->values();
 
-        return inertia('Entrepreneurs/Index', [
+        return view('entrepreneurs.index', [
             'entrepreneurs' => $entrepreneurs,
             'industries' => $industries,
             'cities' => $cities,
@@ -62,7 +62,7 @@ class EntrepreneurController extends Controller
             ->approved()
             ->firstOrFail();
 
-        return inertia('Entrepreneurs/Show', [
+        return view('entrepreneurs.show', [
             'entrepreneur' => $entrepreneur->load('user'),
         ]);
     }

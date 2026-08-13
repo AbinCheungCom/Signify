@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper text-ink font-sans;
+  }
+  ::selection {
+    @apply bg-accent text-white;
+  }
+}
+
+/* 编辑风：细分割线元素 */
+@layer components {
+  .hairline-b {
+    @apply border-b border-hairline;
+  }
+  .btn-ink {
+    @apply inline-block bg-ink text-paper px-6 py-3 text-sm tracking-wide hover:bg-ink-soft transition-colors duration-200;
+  }
+  .btn-outline {
+    @apply inline-block border border-hairline-strong text-ink px-6 py-3 text-sm tracking-wide hover:bg-ink hover:text-paper transition-colors duration-200;
+  }
+  .label-caption {
+    @apply text-xs uppercase tracking-[0.08em];
+  }
+  .input-line {
+    @apply w-full bg-transparent border-b border-hairline py-2.5 text-[15px] focus:outline-none focus:border-ink transition-colors duration-200;
+  }
+  .field-error {
+    @apply text-accent text-xs mt-1;
+  }
+}

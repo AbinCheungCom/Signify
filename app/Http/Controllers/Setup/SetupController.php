@@ -27,7 +27,7 @@ class SetupController extends Controller
             $installed = false;
         }
 
-        return inertia('Setup/Index', [
+        return view('setup.index', [
             'dbConnected' => $dbConnected,
             'installed' => $installed,
             'env' => $this->getCurrentEnv(),

@@ -15,9 +15,9 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): \Inertia\Response
+    public function create(): \Illuminate\Contracts\View\View
     {
-        return inertia('Auth/Register');
+        return view('auth.register');
     }
 
     /**

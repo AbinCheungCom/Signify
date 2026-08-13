@@ -1,22 +1,34 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './resources/**/*.vue',
-    './resources/**/*.js',
+    './resources/views/**/*.blade.php',
+    './app/**/*.php',
   ],
   theme: {
     extend: {
       colors: {
-        'electric-blue': '#3E6AE1',
-        'carbon-dark': '#171A20',
-        'graphite': '#393C41',
-        'pewter': '#5C5E62',
-        'silver-fog': '#8E8E8E',
-        'cloud-gray': '#EEEEEE',
-        'light-ash': '#F4F4F4',
+        paper:   '#FAFAF7',
+        surface: '#FFFFFF',
+        ink:     { DEFAULT: '#1A1A18', soft: '#4A4A45' },
+        muted:   '#8A8A82',
+        hairline:{ DEFAULT: 'rgba(26,26,24,0.10)', strong: 'rgba(26,26,24,0.18)' },
+        accent:  '#B3392C',
+        status:  { success: '#2F6B4F', warning: '#A8791E', danger: '#B3392C' },
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['"Playfair Display"', '"Noto Serif SC"', 'Georgia', 'serif'],
+        sans:    ['"Inter"', '"Noto Sans SC"', 'system-ui', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+      },
+      fontSize: {
+        'display-xl': 'clamp(44px, 6vw, 72px)',
+        'display-lg': 'clamp(32px, 4vw, 48px)',
+        'display-md': 'clamp(24px, 2.6vw, 34px)',
+      },
+      borderRadius: {
+        '2px': '2px',
+      },
+      boxShadow: {
+        float: '0 2px 16px rgba(26,26,24,0.08)',
       },
     },
   },

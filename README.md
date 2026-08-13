@@ -1,6 +1,6 @@
 # Signify - 企业家形象资产数字化系统
 
-> 安全、可控、专业的企业家形象管理平台 · Laravel 11 + Vue 3 + Inertia.js
+> 安全、可控、专业的企业家形象管理平台 · Laravel 11 + Blade + Alpine.js
 
 ---
 
@@ -243,10 +243,10 @@ docker-compose up -d
 | 层级 | 技术 |
 |------|------|
 | 后端框架 | Laravel 11（PHP 8.0+） |
-| 前端框架 | Vue 3 + Inertia.js |
-| 样式 | Tailwind CSS (Tesla 风格) |
+| 前端框架 | Blade + Alpine.js（服务端渲染，零构建） |
+| 样式 | Tailwind CSS（高端编辑/杂志风） |
 | 数据库 | MySQL 5.7+（兼容 enum 替代方案） |
-| 认证 | Laravel Breeze |
+| 认证 | Laravel 认证（Breeze 派生） |
 | 服务器 | Nginx 1.28+ / Apache 2.4+ |
 
 ---
@@ -255,7 +255,7 @@ docker-compose up -d
 
 | 模块 | 说明 |
 |------|------|
-| **首页** | 展示推荐企业家（摄影主导，Tesla 风格） |
+| **首页** | 展示推荐企业家（摄影主导，编辑/杂志风） |
 | **企业家库** | 搜索/筛选/分页，仅显示已认证档案 |
 | **个人中心** | 头像上传/信息编辑，Policy 保护 |
 | **管理后台** | 审批/拒绝/推荐/批量操作 |
@@ -282,7 +282,7 @@ Signify/
 │   ├── nginx.conf            # Nginx 配置模板（传统服务器）
 │   └── 宝塔面板部署教程.md    # 详细部署文档
 ├── resources/js/
-│   └── Pages/                # Inertia 页面组件
+│   └── views/                # Blade 视图（layouts / 页面 / components）
 ├── routes/
 │   ├── web.php               # 主路由
 │   ├── auth.php              # 认证路由

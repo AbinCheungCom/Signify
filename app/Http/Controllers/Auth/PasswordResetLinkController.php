@@ -12,9 +12,9 @@ class PasswordResetLinkController extends Controller
     /**
      * Display the password reset link request view.
      */
-    public function create(): \Inertia\Response
+    public function create(): \Illuminate\Contracts\View\View
     {
-        return inertia('Auth/ForgotPassword');
+        return view('auth.forgot-password');
     }
 
     /**

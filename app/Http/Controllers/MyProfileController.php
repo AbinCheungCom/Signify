@@ -17,7 +17,7 @@ class MyProfileController extends Controller
     {
         $entrepreneur = Auth::user()->entrepreneur;
 
-        return inertia('Profile/Edit', [
+        return view('profile.edit', [
             'entrepreneur' => $entrepreneur,
         ]);
     }

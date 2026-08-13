@@ -35,7 +35,7 @@ class AdminController extends Controller
             'rejected' => (int) $statsRaw->rejected,
         ];
 
-        return inertia('Admin/Dashboard', [
+        return view('admin.dashboard', [
             'pending' => $pending,
             'stats' => $stats,
         ]);
@@ -53,7 +53,7 @@ class AdminController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return inertia('Admin/Entrepreneurs', [
+        return view('admin.entrepreneurs', [
             'entrepreneurs' => $entrepreneurs,
             'filters' => $request->only(['status', 'search']),
         ]);

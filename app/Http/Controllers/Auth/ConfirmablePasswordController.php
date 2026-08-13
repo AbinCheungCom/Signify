@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ConfirmablePasswordController extends Controller
@@ -10,9 +11,9 @@ class ConfirmablePasswordController extends Controller
     /**
      * Display the password confirmation view.
      */
-    public function show(): \Inertia\Response
+    public function show(): \Illuminate\Contracts\View\View
     {
-        return inertia('Auth/ConfirmPassword');
+        return view('auth.confirm-password');
     }
 
     /**

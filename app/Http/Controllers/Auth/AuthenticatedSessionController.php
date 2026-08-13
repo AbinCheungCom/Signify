@@ -12,9 +12,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): \Inertia\Response
+    public function create(): \Illuminate\Contracts\View\View
     {
-        return inertia('Auth/Login');
+        return view('auth.login');
     }
 
     /**
