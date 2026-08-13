@@ -75,7 +75,7 @@
           <div class="bg-surface border border-hairline p-8 max-w-xs w-full shadow-float">
             <p class="label-caption text-muted text-center mb-4">微信二维码</p>
             <img src="{{ asset('storage/'.$entrepreneur->wechat_qrcode) }}" alt="{{ $entrepreneur->name }} 的微信二维码"
-                 class="w-full aspect-square object-contain">
+                 class="w-full h-auto">
             <button @click="showQr = false" class="btn-ink w-full mt-6">关闭</button>
           </div>
         </div>
