@@ -39,19 +39,23 @@ class MyProfileController extends Controller
 
         $data = $request->validated();
 
-        // 头像校验与存储抽至 AvatarService（扩展名白名单 + GD 校验，兼容无 fileinfo）
+        // 文件字段由下方单独处理（避免空文件输入把已有图片清空）
+        unset($data['avatar'], $data['wechat_qrcode']);
+
+        // 头像：先校验并存储新图，成功后再删旧图（失败不误删）
         if ($request->hasFile('avatar')) {
-            $avatarService->delete($entrepreneur->avatar);
             $data['avatar'] = $avatarService->store($request->file('avatar'));
+            $avatarService->delete($entrepreneur->avatar);
         }
 
-        // 微信二维码（同头像校验策略，存 qrcodes 目录）
+        // 微信二维码：同上
         if ($request->hasFile('wechat_qrcode')) {
-            $avatarService->delete($entrepreneur->wechat_qrcode);
             $data['wechat_qrcode'] = $avatarService->store($request->file('wechat_qrcode'), 'qrcodes');
+            $avatarService->delete($entrepreneur->wechat_qrcode);
         }
 
-        $entrepreneur->update(array_filter($data, fn($v) => $v !== null));
+        // 直接 update：文本字段为空时（null）即清空生效
+        $entrepreneur->update($data);
 
         return redirect()->back()->with('success', '信息更新成功！');
     }
