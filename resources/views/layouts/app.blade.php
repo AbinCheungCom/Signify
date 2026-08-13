@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'SIGNIFY') · 每一份引领行业的商业远见，都值得被更广泛地看见</title>
+  <title>@yield('title', 'SIGNIFY')</title>
   <meta name="description" content="不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。">
   <meta name="theme-color" content="#FAFAF7">
 
