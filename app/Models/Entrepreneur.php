@@ -16,12 +16,14 @@ class Entrepreneur extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'title',
         'avatar',
         'industry',
         'city',
         'bio',
         'contact_phone',
         'contact_email',
+        'wechat_qrcode',
         'is_featured',
         'status',
     ];

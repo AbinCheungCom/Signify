@@ -63,7 +63,7 @@
 
   <footer class="border-t border-hairline">
     <div class="max-w-7xl mx-auto px-6 py-12 text-center">
-      <p class="label-caption text-muted">SIGNIFY · 每一份引领行业的商业远见，都值得被更广泛地看见</p>
+      <p class="label-caption text-muted">© SIGNIFY</p>
     </div>
   </footer>
 

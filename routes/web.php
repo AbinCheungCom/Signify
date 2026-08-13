@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 | 公开路由
 |--------------------------------------------------------------------------
 */
-Route::get('/', [EntrepreneurController::class, 'home'])->name('home');
+Route::get('/', [EntrepreneurController::class, 'home'])->middleware('auth')->name('home');
 Route::get('/entrepreneurs', [EntrepreneurController::class, 'index'])->name('entrepreneurs.index');
 Route::get('/entrepreneurs/{id}', [EntrepreneurController::class, 'show'])->name('entrepreneurs.show')->whereNumber('id');
 

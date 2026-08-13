@@ -123,27 +123,28 @@ class AdminWorkflowTest extends TestCase
     }
 
     /**
-     * 待审核企业家不会出现在首页
+     * 待审核企业家不会出现在企业家库（即使已推荐）
      */
-    public function test_pending_entrepreneur_not_on_home(): void
+    public function test_pending_entrepreneur_not_in_directory(): void
     {
         $pending = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_PENDING,
             'is_featured' => true,
         ]);
 
-        $response = $this->get('/');
+        $response = $this->get('/entrepreneurs');
 
         $response->assertDontSee($pending->name);
     }
 
     /**
-     * 已拒绝企业家不会出现在列表页
+     * 已拒绝企业家不会出现在列表页（即使已推荐）
      */
     public function test_rejected_entrepreneur_not_in_list(): void
     {
         $rejected = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_REJECTED,
+            'is_featured' => true,
         ]);
 
         $response = $this->get('/entrepreneurs');

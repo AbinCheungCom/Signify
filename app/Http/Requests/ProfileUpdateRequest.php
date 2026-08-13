@@ -25,12 +25,14 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|string|max:100',
+            'title' => 'sometimes|string|max:100|nullable',
             'avatar' => ['sometimes', 'file', 'max:2048'],
             'industry' => 'sometimes|string|max:100|nullable',
             'city' => 'sometimes|string|max:100|nullable',
             'bio' => 'sometimes|string|max:500|nullable',
             'contact_phone' => 'sometimes|string|max:20|nullable',
             'contact_email' => 'sometimes|email|max:100|nullable',
+            'wechat_qrcode' => ['sometimes', 'file', 'max:2048'],
         ];
     }
 }

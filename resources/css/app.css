@@ -13,6 +13,8 @@
   ::selection {
     @apply bg-accent text-white;
   }
+  /* Alpine 弹窗初始化前隐藏（配合 x-cloak） */
+  [x-cloak] { display: none !important; }
 }
 
 /* 编辑风：细分割线元素 */

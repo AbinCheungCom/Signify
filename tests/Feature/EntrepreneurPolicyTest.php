@@ -68,26 +68,34 @@ class EntrepreneurPolicyTest extends TestCase
     }
 
     /**
-     * 首页仅展示已认证的企业家
+     * 未登录访问首页 → 跳转登录页（登录墙）
      */
-    public function test_home_only_shows_approved_entrepreneurs(): void
+    public function test_guest_redirected_to_login_from_home(): void
     {
-        $approved = Entrepreneur::factory()->create([
-            'status' => Entrepreneur::STATUS_APPROVED,
-            'is_featured' => true,
-        ]);
-        $pending = Entrepreneur::factory()->create([
-            'status' => Entrepreneur::STATUS_PENDING,
-        ]);
-        $rejected = Entrepreneur::factory()->create([
-            'status' => Entrepreneur::STATUS_REJECTED,
-        ]);
-
         $response = $this->get('/');
 
-        $response->assertSee($approved->name);
-        $response->assertDontSee($pending->name);
-        $response->assertDontSee($rejected->name);
+        $response->assertRedirect('/login');
+    }
+
+    /**
+     * 用户可以更新职务字段
+     */
+    public function test_user_can_update_title(): void
+    {
+        $user = User::factory()->create();
+        $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch('/my/profile', [
+            'title' => '创始人 / CEO',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('entrepreneurs', [
+            'id' => $entrepreneur->id,
+            'title' => '创始人 / CEO',
+        ]);
     }
 
     /**
@@ -98,10 +106,12 @@ class EntrepreneurPolicyTest extends TestCase
         $target = Entrepreneur::factory()->create([
             'name' => '张三',
             'status' => Entrepreneur::STATUS_APPROVED,
+            'is_featured' => true,
         ]);
         $other = Entrepreneur::factory()->create([
             'name' => '李四',
             'status' => Entrepreneur::STATUS_APPROVED,
+            'is_featured' => true,
         ]);
 
         $response = $this->get('/entrepreneurs?search=张三');
@@ -117,6 +127,7 @@ class EntrepreneurPolicyTest extends TestCase
     {
         Entrepreneur::factory()->count(15)->create([
             'status' => Entrepreneur::STATUS_APPROVED,
+            'is_featured' => true,
         ]);
 
         $response = $this->get('/entrepreneurs?page=1');

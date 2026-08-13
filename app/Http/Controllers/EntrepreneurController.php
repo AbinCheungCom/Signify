@@ -4,23 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Entrepreneur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EntrepreneurController extends Controller
 {
     /**
-     * 首页 - 展示推荐企业家
+     * 首页：登录墙。登录后跳个人详情；无档案则引导创建。
      */
     public function home()
     {
-        $featuredEntrepreneurs = Entrepreneur::approved()
-            ->featured()
-            ->latest()
-            ->take(6)
-            ->get();
+        $entrepreneur = Auth::user()->entrepreneur;
 
-        return view('home', [
-            'featuredEntrepreneurs' => $featuredEntrepreneurs,
-        ]);
+        return $entrepreneur
+            ? redirect()->route('entrepreneurs.show', $entrepreneur->id)
+            : redirect()->route('profile.show');
     }
 
     /**
@@ -29,6 +26,7 @@ class EntrepreneurController extends Controller
     public function index(Request $request)
     {
         $entrepreneurs = Entrepreneur::approved()
+            ->featured()
             ->search($request->get('search'))
             ->when($request->get('industry'), function ($query, $industry) {
                 $query->where('industry', $industry);
@@ -41,8 +39,8 @@ class EntrepreneurController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $industries = Entrepreneur::approved()->pluck('industry')->filter()->unique()->sort()->values();
-        $cities = Entrepreneur::approved()->pluck('city')->filter()->unique()->sort()->values();
+        $industries = Entrepreneur::approved()->featured()->pluck('industry')->filter()->unique()->sort()->values();
+        $cities = Entrepreneur::approved()->featured()->pluck('city')->filter()->unique()->sort()->values();
 
         return view('entrepreneurs.index', [
             'entrepreneurs' => $entrepreneurs,
@@ -53,13 +51,16 @@ class EntrepreneurController extends Controller
     }
 
     /**
-     * 企业家详情（防路由模型绑定泄露）
+     * 企业家详情。
+     * 访客仅可见已认证档案；本人可见自己的档案（含待审核/已拒绝）。
      */
     public function show(int $id)
     {
-        // 显式查询替代隐式路由模型绑定，防止未认证数据泄露
         $entrepreneur = Entrepreneur::where('id', $id)
-            ->approved()
+            ->where(function ($q) {
+                $q->where('status', Entrepreneur::STATUS_APPROVED)
+                    ->orWhere('user_id', Auth::id());
+            })
             ->firstOrFail();
 
         return view('entrepreneurs.show', [

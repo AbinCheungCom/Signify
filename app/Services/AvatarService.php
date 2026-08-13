@@ -19,7 +19,7 @@ class AvatarService
      *
      * @throws ValidationException 扩展名或内容非法时
      */
-    public function store(UploadedFile $file): string
+    public function store(UploadedFile $file, string $directory = 'avatars'): string
     {
         $extension = strtolower($file->getClientOriginalExtension());
 
@@ -38,7 +38,7 @@ class AvatarService
         // 使用安全文件名，避免原始文件名注入
         $filename = time().'_'.uniqid().'.'.$extension;
 
-        return $file->storeAs('avatars', $filename, 'public');
+        return $file->storeAs($directory, $filename, 'public');
     }
 
     /**

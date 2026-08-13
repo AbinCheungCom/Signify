@@ -45,6 +45,12 @@ class MyProfileController extends Controller
             $data['avatar'] = $avatarService->store($request->file('avatar'));
         }
 
+        // 微信二维码（同头像校验策略，存 qrcodes 目录）
+        if ($request->hasFile('wechat_qrcode')) {
+            $avatarService->delete($entrepreneur->wechat_qrcode);
+            $data['wechat_qrcode'] = $avatarService->store($request->file('wechat_qrcode'), 'qrcodes');
+        }
+
         $entrepreneur->update(array_filter($data, fn($v) => $v !== null));
 
         return redirect()->back()->with('success', '信息更新成功！');
