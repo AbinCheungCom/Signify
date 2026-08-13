@@ -11,8 +11,6 @@
 @section('content')
 
 <div class="max-w-7xl mx-auto px-6 py-16">
-  <a href="{{ route('entrepreneurs.index') }}" class="label-caption text-muted hover:text-ink transition-colors">← 返回企业家库</a>
-
   <article class="mt-10 grid grid-cols-1 md:grid-cols-5 gap-12">
     <div class="md:col-span-2">
       @if($entrepreneur->avatar)
@@ -40,7 +38,7 @@
       @endif
 
       @if($entrepreneur->wechat_qrcode || $entrepreneur->contact_phone || $entrepreneur->contact_email)
-        <div class="mt-10 pt-8 border-t border-hairline flex items-center gap-8" x-data="{ showQr: false }">
+        <div class="mt-10 pt-8 border-t border-hairline flex items-center justify-center gap-8" x-data="{ showQr: false }">
           @if($entrepreneur->wechat_qrcode)
             <button type="button" @click="showQr = true"
                     class="text-ink hover:opacity-60 transition-opacity" aria-label="微信" title="微信二维码">
@@ -66,17 +64,17 @@
               </svg>
             </a>
           @endif
-        </div>
 
-        <!-- 微信二维码弹窗 -->
-        <div x-show="showQr" x-cloak @keydown.escape.window="showQr = false"
-             class="fixed inset-0 z-[300] bg-ink/60 backdrop-blur-sm grid place-items-center p-6"
-             @click.self="showQr = false">
-          <div class="bg-surface border border-hairline p-8 max-w-xs w-full shadow-float">
-            <p class="label-caption text-muted text-center mb-4">微信二维码</p>
-            <img src="{{ asset('storage/'.$entrepreneur->wechat_qrcode) }}" alt="{{ $entrepreneur->name }} 的微信二维码"
-                 class="w-full h-auto">
-            <button @click="showQr = false" class="btn-ink w-full mt-6">关闭</button>
+          <!-- 微信二维码弹窗 -->
+          <div x-show="showQr" x-cloak @keydown.escape.window="showQr = false"
+               class="fixed inset-0 z-[300] bg-ink/60 backdrop-blur-sm grid place-items-center p-6"
+               @click.self="showQr = false">
+            <div class="bg-surface border border-hairline p-8 max-w-xs w-full shadow-float">
+              <p class="label-caption text-muted text-center mb-4">微信二维码</p>
+              <img src="{{ asset('storage/'.$entrepreneur->wechat_qrcode) }}" alt="{{ $entrepreneur->name }} 的微信二维码"
+                   class="w-full h-auto">
+              <button @click="showQr = false" class="btn-ink w-full mt-6">关闭</button>
+            </div>
           </div>
         </div>
       @endif
