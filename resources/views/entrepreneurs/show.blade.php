@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $entrepreneur->name)
+@section('title', $entrepreneur->name.' — SIGNIFY')
 
 {{-- 分享卡片：图片用该企业家上传的头像 --}}
 @section('og-title', $entrepreneur->name.' — SIGNIFY')
