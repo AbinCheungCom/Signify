@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ class PasswordResetTest extends TestCase
 
     public function test_forgot_password_sends_reset_link(): void
     {
-        Mail::fake();
+        Notification::fake();
 
         $user = User::factory()->create();
 
@@ -32,7 +32,7 @@ class PasswordResetTest extends TestCase
 
         $response->assertSessionHas('status');
         $this->assertDatabaseHas('password_reset_tokens', ['email' => $user->email]);
-        Mail::assertSent(ResetPassword::class);
+        Notification::assertSentTo($user, ResetPassword::class);
     }
 
     public function test_reset_password_page_renders(): void

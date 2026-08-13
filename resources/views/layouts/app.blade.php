@@ -16,7 +16,7 @@
   <link rel="manifest" href="{{ asset('site.webmanifest') }}">
   <link rel="mask-icon" href="{{ asset('safari-pinned-tab.svg') }}" color="#1A1A18">
 
-  <!-- 微信 / 社交媒体分享（各页可用 @section('og-title'/'og-description'/'og-url'/'og-image') 覆盖） -->
+  <!-- 微信 / 社交媒体分享（各页可用 og-title / og-description / og-url / og-image 区块覆盖） -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SIGNIFY">
   <meta property="og:title" content="@yield('og-title', 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见')">
