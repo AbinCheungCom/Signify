@@ -64,8 +64,7 @@ class SetupController extends Controller
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             // P1修复：强制字符集 + 反引号包裹数据库名，防止特殊字符问题
-            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database`
-                ` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
             // 重新连接指定数据库验证
             $pdo->exec("USE `{$database}`");
