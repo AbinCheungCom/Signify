@@ -87,7 +87,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <label class="label-caption text-muted">行业</label>
+          <label class="label-caption text-muted">研究领域</label>
           <input type="text" name="industry" value="{{ old('industry', $entrepreneur->industry) }}" class="input-line">
         </div>
         <div>
