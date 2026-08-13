@@ -1,6 +1,9 @@
 # Signify - 企业家形象资产数字化系统
 
-> 安全、可控、专业的企业家形象管理平台 · Laravel 11 + Blade + Alpine.js
+> **每一份引领行业的商业远见，都值得被更广泛地看见。**
+>
+> 不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。
+> Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建
 
 ---
 
@@ -15,7 +18,7 @@
 | **Nginx** | 1.28+ | 或 Apache 2.4+ |
 | **phpMyAdmin** | 5.0+ | 数据库管理（可选） |
 
-**PHP 扩展（必须）：** `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `curl`, `gd`
+**PHP 扩展（必须）：** `pdo_mysql`, `mbstring`, `openssl`, `curl`, `gd`（`fileinfo` **非必需**——头像上传已做兼容，缺 fileinfo 也能正常跑）
 
 > ⚠️ **重要：** MySQL 5.7 不支持 Laravel 11 默认的 enum 类型，项目已改用 `string` 类型替代，迁移文件完全兼容。
 
@@ -73,7 +76,7 @@ SESSION_DRIVER=file
 cd /www/wwwroot/signify
 
 # 安装 Composer 依赖
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-fileinfo
 
 # 生成应用密钥
 php artisan key:generate
@@ -84,8 +87,8 @@ php artisan storage:link
 # 运行数据库迁移（兼容 MySQL 5.7）
 php artisan migrate --force
 
-# 清除缓存
-php artisan config:clear
+# 刷新配置缓存（改 .env 后必须执行）
+php artisan config:cache
 ```
 
 #### 第五步：设置目录权限
@@ -208,7 +211,7 @@ php artisan tinker
 | **数据隔离** | `user_id` UNIQUE 约束 + `EntrepreneurPolicy` 验证 |
 | **防注入** | LIKE 查询 `addcslashes()` 转义特殊字符 |
 | **防越权** | 路由模型绑定替换为显式 `approved()` 查询 |
-| **头像安全** | MIME 验证 + 扩展名白名单 + 安全文件名 |
+| **头像安全** | 扩展名白名单 + GD 校验 + 安全文件名（兼容无 fileinfo 服务器） |
 | **管理员授权** | 中间件 + Policy 双重保护 |
 | **敏感文件** | Nginx 禁止访问 `.env` |
 | **生产模式** | `APP_DEBUG=false` + `APP_ENV=production` |
@@ -220,9 +223,9 @@ php artisan tinker
 ```bash
 cd /www/wwwroot/signify
 git pull
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-fileinfo
 php artisan key:generate
-php artisan config:clear
+php artisan config:cache
 chown -R www:www /www/wwwroot/signify
 ```
 
@@ -260,6 +263,7 @@ docker-compose up -d
 | **个人中心** | 头像上传/信息编辑，Policy 保护 |
 | **管理后台** | 审批/拒绝/推荐/批量操作 |
 | **一键安装** | 数据库连接测试 + 自动建库 |
+| **品牌分享** | 名片分享图用企业家头像（og 标签），微信/社交可预览 |
 | **数据隔离** | 用户仅可修改自己的档案 |
 
 ---
@@ -281,13 +285,13 @@ Signify/
 ├── deploy/
 │   ├── nginx.conf            # Nginx 配置模板（传统服务器）
 │   └── 宝塔面板部署教程.md    # 详细部署文档
-├── resources/js/
-│   └── views/                # Blade 视图（layouts / 页面 / components）
+├── resources/views/          # Blade 视图（layouts / 页面 / components）
 ├── routes/
 │   ├── web.php               # 主路由
 │   ├── auth.php              # 认证路由
 │   └── setup.php             # 安装路由
-├── tests/Feature/           # 功能测试
+├── tests/Feature/           # 功能测试（22 用例）
+├── docs/                    # 项目文档（重构方案 / UI 规范 / 页面清单）
 └── .env.example              # 环境变量模板
 ```
 
