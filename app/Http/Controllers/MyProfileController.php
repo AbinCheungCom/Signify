@@ -68,9 +68,9 @@ class MyProfileController extends Controller
         $entrepreneur = Entrepreneur::create([
             'user_id' => Auth::id(),
             'name' => $request->validated('name'),
-            'status' => Entrepreneur::STATUS_PENDING,
+            'status' => Entrepreneur::STATUS_APPROVED,
         ]);
 
-        return redirect()->route('profile.show')->with('success', '档案创建成功，等待审核！');
+        return redirect()->route('profile.show')->with('success', '档案创建成功！');
     }
 }
