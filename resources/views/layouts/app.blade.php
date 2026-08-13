@@ -42,7 +42,7 @@
       <a href="{{ route('home') }}" class="font-display text-2xl font-black tracking-tight text-ink">SIGNIFY</a>
       <nav class="flex items-center gap-8">
         <a href="{{ route('entrepreneurs.index') }}"
-           class="label-caption pb-1 {{ request()->routeIs('entrepreneurs.index', 'entrepreneurs.show') ? 'border-b border-ink text-ink' : 'text-ink-soft hover:text-ink' }}">企业家库</a>
+           class="label-caption pb-1 {{ request()->routeIs('entrepreneurs.index', 'entrepreneurs.show') ? 'border-b border-ink text-ink' : 'text-ink-soft hover:text-ink' }}">智库</a>
         @auth
           @if(auth()->user()->is_admin)
             <a href="{{ route('admin.dashboard') }}" class="label-caption text-ink-soft hover:text-ink">后台</a>

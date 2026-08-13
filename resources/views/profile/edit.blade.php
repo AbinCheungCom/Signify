@@ -10,7 +10,7 @@
   @if(!$entrepreneur)
     <div class="border border-hairline bg-surface p-10">
       <h2 class="font-display text-display-md font-bold text-ink mb-2">创建企业家档案</h2>
-      <p class="text-sm text-muted mb-8">创建后需管理员审核，通过并「推荐」后进入企业家库。</p>
+      <p class="text-sm text-muted mb-8">创建后需管理员审核，通过并「推荐」后进入智库。</p>
       <form method="POST" action="{{ route('profile.create') }}" class="max-w-md space-y-6">
         @csrf
         <div>
@@ -25,7 +25,7 @@
     <div class="mb-8 border border-hairline bg-surface px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
       <p class="text-sm text-ink-soft">
         @if($entrepreneur->status === 'pending')
-          档案已提交，等待管理员审核；通过并「推荐」后进入企业家库。
+          档案已提交，等待管理员审核；通过并「推荐」后进入智库。
         @else
           完善资料后可生成个人名片，方便分享。
         @endif
