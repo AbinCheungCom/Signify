@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BatchActionRequest;
 use App\Models\Entrepreneur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,12 +113,9 @@ class AdminController extends Controller
     /**
      * 批量审批通过
      */
-    public function batchApprove(Request $request)
+    public function batchApprove(BatchActionRequest $request)
     {
-        $validated = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer',
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
 
@@ -139,12 +137,9 @@ class AdminController extends Controller
     /**
      * 批量拒绝
      */
-    public function batchReject(Request $request)
+    public function batchReject(BatchActionRequest $request)
     {
-        $validated = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer',
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
 

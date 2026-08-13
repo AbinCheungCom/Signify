@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileCreateRequest;
+use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Entrepreneur;
-use Illuminate\Http\Request;
+use App\Services\AvatarService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class MyProfileController extends Controller
 {
@@ -26,7 +26,7 @@ class MyProfileController extends Controller
      * 更新个人档案
      * 核心：Policy 验证 user_id 匹配
      */
-    public function update(Request $request)
+    public function update(ProfileUpdateRequest $request, AvatarService $avatarService)
     {
         $entrepreneur = Auth::user()->entrepreneur;
 
@@ -37,47 +37,12 @@ class MyProfileController extends Controller
         // Policy 自动验证：仅 user_id 匹配才可更新
         $this->authorize('update', $entrepreneur);
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:100',
-            'avatar' => [
-                'sometimes',
-                'file',
-                'max:2048',
-            ],
-            'industry' => 'sometimes|string|max:100|nullable',
-            'city' => 'sometimes|string|max:100|nullable',
-            'bio' => 'sometimes|string|max:500|nullable',
-            'contact_phone' => 'sometimes|string|max:20|nullable',
-            'contact_email' => 'sometimes|email|max:100|nullable',
-        ]);
+        $data = $request->validated();
 
-        // 处理头像上传
+        // 头像校验与存储抽至 AvatarService（扩展名白名单 + GD 校验，兼容无 fileinfo）
         if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-
-            // 验证文件扩展名（服务器无 fileinfo，改用扩展名白名单兜底）
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            $extension = strtolower($file->getClientOriginalExtension());
-            if (!in_array($extension, $allowedExtensions)) {
-                return redirect()->back()->with('error', '头像仅支持 JPG/PNG/GIF/WEBP 格式');
-            }
-
-            // 可选：GD 存在时做真实图片校验（getimagesize 仅需 GD，不依赖 fileinfo）
-            if (function_exists('getimagesize')) {
-                $imgInfo = @getimagesize($file->getPathname());
-                if ($imgInfo === false) {
-                    return redirect()->back()->with('error', '文件不是有效的图片');
-                }
-            }
-
-            // 删除旧头像
-            if ($entrepreneur->avatar) {
-                Storage::disk('public')->delete($entrepreneur->avatar);
-            }
-
-            // 保存新头像（使用安全文件名）
-            $filename = time() . '_' . uniqid() . '.' . $extension;
-            $data['avatar'] = $file->storeAs('avatars', $filename, 'public');
+            $avatarService->delete($entrepreneur->avatar);
+            $data['avatar'] = $avatarService->store($request->file('avatar'));
         }
 
         $entrepreneur->update(array_filter($data, fn($v) => $v !== null));
@@ -88,23 +53,15 @@ class MyProfileController extends Controller
     /**
      * 创建企业家档案
      */
-    public function create(Request $request)
+    public function create(ProfileCreateRequest $request)
     {
-        $existing = Auth::user()->entrepreneur;
-
-        if ($existing) {
+        if (Auth::user()->entrepreneur) {
             return redirect()->route('profile.show');
         }
 
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-        ], [], [
-            'name' => '姓名',
-        ]);
-
         $entrepreneur = Entrepreneur::create([
             'user_id' => Auth::id(),
-            'name' => $data['name'],
+            'name' => $request->validated('name'),
             'status' => Entrepreneur::STATUS_PENDING,
         ]);
 
