@@ -42,9 +42,7 @@ class MyProfileController extends Controller
             'avatar' => [
                 'sometimes',
                 'file',
-                'image',
                 'max:2048',
-                'mimes:jpg,jpeg,png,gif,webp',
             ],
             'industry' => 'sometimes|string|max:100|nullable',
             'city' => 'sometimes|string|max:100|nullable',
@@ -57,11 +55,19 @@ class MyProfileController extends Controller
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
 
-            // 验证文件扩展名（防止绕过 MIME 检测）
+            // 验证文件扩展名（服务器无 fileinfo，改用扩展名白名单兜底）
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             $extension = strtolower($file->getClientOriginalExtension());
             if (!in_array($extension, $allowedExtensions)) {
                 return redirect()->back()->with('error', '头像仅支持 JPG/PNG/GIF/WEBP 格式');
+            }
+
+            // 可选：GD 存在时做真实图片校验（getimagesize 仅需 GD，不依赖 fileinfo）
+            if (function_exists('getimagesize')) {
+                $imgInfo = @getimagesize($file->getPathname());
+                if ($imgInfo === false) {
+                    return redirect()->back()->with('error', '文件不是有效的图片');
+                }
             }
 
             // 删除旧头像
