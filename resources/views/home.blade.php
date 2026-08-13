@@ -5,12 +5,12 @@
 @section('content')
 
 <section class="max-w-7xl mx-auto px-6 pt-20 pb-16">
-  <p class="label-caption text-accent mb-6">THE ENTREPRENEURS</p>
+  <p class="label-caption text-accent mb-6">SIGNIFY</p>
   <h1 class="font-display text-display-xl font-black text-ink leading-tight max-w-4xl">
-    企业家形象资产
+    每一份引领行业的商业远见，<br>都值得被更广泛地看见。
   </h1>
   <p class="mt-6 text-lg text-ink-soft max-w-2xl leading-relaxed">
-    让每一位企业家的形象，成为被看见的资产。
+    不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。
   </p>
 </section>
 

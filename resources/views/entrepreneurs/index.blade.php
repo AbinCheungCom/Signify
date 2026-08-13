@@ -5,7 +5,7 @@
 @section('content')
 
 <section class="max-w-7xl mx-auto px-6 pt-16 pb-10">
-  <p class="label-caption text-accent mb-4">THE ENTREPRENEURS</p>
+  <p class="label-caption text-accent mb-4">SIGNIFY · ENTREPRENEURS</p>
   <h1 class="font-display text-display-lg font-black text-ink">企业家库</h1>
   <p class="mt-4 text-ink-soft max-w-2xl leading-relaxed">探索优秀企业家的形象档案</p>
 </section>

@@ -4,7 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'SIGNIFY') · 企业家形象资产</title>
+  <title>@yield('title', 'SIGNIFY') · 每一份引领行业的商业远见，都值得被更广泛地看见</title>
+  <meta name="description" content="不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。">
+  <meta name="theme-color" content="#FAFAF7">
+
+  <!-- 浏览器图标 -->
+  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+  <link rel="mask-icon" href="{{ asset('safari-pinned-tab.svg') }}" color="#1A1A18">
+
+  <!-- 微信 / 社交媒体分享 -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SIGNIFY">
+  <meta property="og:title" content="SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见">
+  <meta property="og:description" content="不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。">
+  <meta property="og:url" content="{{ url('/') }}">
+  <meta property="og:image" content="{{ asset('android-chrome-512x512.png') }}">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见">
+  <meta name="twitter:description" content="不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。">
+  <meta name="twitter:image" content="{{ asset('android-chrome-512x512.png') }}">
+
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
@@ -39,7 +63,7 @@
 
   <footer class="border-t border-hairline">
     <div class="max-w-7xl mx-auto px-6 py-12 text-center">
-      <p class="label-caption text-muted">SIGNIFY · 企业家形象资产数字化系统</p>
+      <p class="label-caption text-muted">SIGNIFY · 每一份引领行业的商业远见，都值得被更广泛地看见</p>
     </div>
   </footer>
 
