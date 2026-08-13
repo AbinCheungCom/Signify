@@ -32,9 +32,22 @@
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
-  <!-- 仅加载拉丁字体（Playfair/Inter）；中文用系统字体（思源 CJK 体积大，改非阻塞避免拖慢首屏） -->
-  <link href="https://fonts.googleapis.cn/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.cn/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+  <!-- 拉丁字体（Playfair/Inter）：国内节点优先，失败自动切谷歌；中文用系统字体 -->
+  <script>
+    (function () {
+      var FONT_CSS = "css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;700&display=swap";
+      function loadFonts(cdn) {
+        var l = document.createElement("link");
+        l.rel = "stylesheet";
+        l.href = "https://" + cdn + "/" + FONT_CSS;
+        if (cdn !== "fonts.googleapis.com") {
+          l.onerror = function () { loadFonts("fonts.googleapis.com"); };
+        }
+        document.head.appendChild(l);
+      }
+      loadFonts("fonts.googleapis.cn"); /* 国内优先，失败自动切谷歌 */
+    })();
+  </script>
   <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </head>
 <body class="min-h-screen flex flex-col">
