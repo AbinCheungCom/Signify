@@ -16,8 +16,8 @@ module.exports = {
         status:  { success: '#2F6B4F', warning: '#A8791E', danger: '#B3392C' },
       },
       fontFamily: {
-        display: ['"Playfair Display"', '"Noto Serif SC"', 'Georgia', 'serif'],
-        sans:    ['"Inter"', '"Noto Sans SC"', 'system-ui', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', '"Songti SC"', 'SimSun', 'serif'],
+        sans:    ['"Inter"', 'system-ui', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
       },
       fontSize: {
         'display-xl': 'clamp(44px, 6vw, 72px)',

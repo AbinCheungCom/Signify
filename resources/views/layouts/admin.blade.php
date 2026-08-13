@@ -12,7 +12,8 @@
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
-  <link href="https://fonts.googleapis.cn/css2?family=Playfair+Display:wght@700;900&family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.cn/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.cn/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
   <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-paper">
