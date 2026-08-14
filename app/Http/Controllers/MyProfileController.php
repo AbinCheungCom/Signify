@@ -19,6 +19,7 @@ class MyProfileController extends Controller
 
         return view('profile.edit', [
             'entrepreneur' => $entrepreneur,
+            'cities' => config('cities', []),
         ]);
     }
 
