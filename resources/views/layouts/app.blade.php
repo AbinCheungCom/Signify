@@ -19,15 +19,15 @@
   <!-- 微信 / 社交媒体分享（各页可用 og-title / og-description / og-url / og-image 区块覆盖） -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SIGNIFY">
-  <meta property="og:title" content="{{ @yield('og-title', 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见') }}">
-  <meta property="og:description" content="{{ @yield('og-description', '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。') }}">
-  <meta property="og:url" content="{{ @yield('og-url', url('/')) }}">
-  <meta property="og:image" content="{{ @yield('og-image', asset('android-chrome-512x512.png')) }}">
+  <meta property="og:title" content="@yield('og-title', 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见')">
+  <meta property="og:description" content="@yield('og-description', '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。')">
+  <meta property="og:url" content="@yield('og-url', url('/'))">
+  <meta property="og:image" content="@yield('og-image', asset('android-chrome-512x512.png'))">
   <meta property="og:locale" content="zh_CN">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ @yield('og-title', 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见') }}">
-  <meta name="twitter:description" content="{{ @yield('og-description', '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。') }}">
-  <meta name="twitter:image" content="{{ @yield('og-image', asset('android-chrome-512x512.png')) }}">
+  <meta name="twitter:title" content="@yield('og-title', 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见')">
+  <meta name="twitter:description" content="@yield('og-description', '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。')">
+  <meta name="twitter:image" content="@yield('og-image', asset('android-chrome-512x512.png'))">
 
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.cn">
