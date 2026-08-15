@@ -39,7 +39,7 @@
         <p class="mt-8 text-lg text-ink-soft leading-relaxed whitespace-pre-line">{{ $entrepreneur->bio }}</p>
       @endif
 
-      @if($entrepreneur->wechat_qrcode || $entrepreneur->contact_phone || $entrepreneur->contact_email)
+      @if($entrepreneur->wechat_qrcode || $entrepreneur->contact_phone || $entrepreneur->contact_email || $entrepreneur->social_url)
         <div class="mt-10 pt-8 border-t border-hairline flex items-center justify-center gap-8" x-data="{ showQr: false }">
           @if($entrepreneur->wechat_qrcode)
             <button type="button" @click="showQr = true"
@@ -64,6 +64,13 @@
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
+            </a>
+          @endif
+          @if($entrepreneur->social_url && \Illuminate\Support\Str::startsWith($entrepreneur->social_url, ['http://', 'https://']))
+            <a href="{{ e($entrepreneur->social_url) }}" target="_blank" rel="noopener"
+               class="text-ink hover:opacity-60 transition-opacity" title="{{ $entrepreneur->social_platform }}">
+              <img src="{{ asset('icons/'.\App\Models\Entrepreneur::socialIconFile($entrepreneur->social_platform)) }}"
+                   class="w-6 h-6" alt="{{ $entrepreneur->social_platform }}">
             </a>
           @endif
 

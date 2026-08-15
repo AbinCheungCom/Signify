@@ -24,6 +24,8 @@ class Entrepreneur extends Model
         'contact_phone',
         'contact_email',
         'wechat_qrcode',
+        'social_platform',
+        'social_url',
         'is_featured',
         'status',
         'featured_request_status',
@@ -105,5 +107,37 @@ class Entrepreneur extends Model
               ->orWhere('industry', 'like', "%{$escaped}%")
               ->orWhere('city', 'like', "%{$escaped}%");
         });
+    }
+
+    /**
+     * 社交平台 → 黑色图标文件映射表
+     * 兼容中英文平台名（统一转小写后匹配）
+     */
+    public static function socialIconMap(): array
+    {
+        return [
+            '小红书' => 'xiaohongshu.svg',
+            'xiaohongshu' => 'xiaohongshu.svg',
+            'red' => 'xiaohongshu.svg',
+            '微博' => 'weibo.svg',
+            'weibo' => 'weibo.svg',
+            '抖音' => 'douyin.svg',
+            'douyin' => 'douyin.svg',
+            '脸书' => 'facebook.svg',
+            'facebook' => 'facebook.svg',
+            'instagram' => 'instagram.svg',
+            'telegram' => 'telegram.svg',
+            'whatsapp' => 'whatsapp.svg',
+        ];
+    }
+
+    /**
+     * 解析平台名对应的图标文件名；范围外平台回退默认 google.svg
+     */
+    public static function socialIconFile(?string $platform): string
+    {
+        $key = strtolower(trim((string) $platform));
+
+        return self::socialIconMap()[$key] ?? 'google.svg';
     }
 }

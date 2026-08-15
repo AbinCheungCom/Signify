@@ -187,7 +187,7 @@
 
       <div>
         <label class="label-caption text-muted">简介</label>
-        <textarea name="bio" rows="4" class="input-line resize-none">{{ old('bio', $entrepreneur->bio) }}</textarea>
+        <textarea name="bio" rows="8" class="input-line resize-none">{{ old('bio', $entrepreneur->bio) }}</textarea>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -201,20 +201,36 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8"
+           x-data="{ platform: @js(old('social_platform', $entrepreneur->social_platform ?? '')), icons: @js(\App\Models\Entrepreneur::socialIconMap()) }">
+        <div>
+          <label class="label-caption text-muted">社交平台</label>
+          <input type="text" name="social_platform" list="social-platforms"
+                 x-model="platform"
+                 value="{{ old('social_platform', $entrepreneur->social_platform) }}"
+                 placeholder="小红书 / 微博 / Instagram…" class="input-line">
+          <datalist id="social-platforms">
+            <option value="小红书"></option><option value="微博"></option>
+            <option value="抖音"></option><option value="脸书"></option>
+            <option value="Instagram"></option><option value="Telegram"></option>
+            <option value="WhatsApp"></option>
+          </datalist>
+          <img :src="'{{ asset('icons') }}/' + (icons[platform.trim().toLowerCase()] ?? 'google.svg')"
+               x-show="platform.trim() !== ''"
+               class="w-4 h-4 mt-2" :alt="platform">
+          @error('social_platform') <p class="field-error">{{ $message }}</p> @enderror
+        </div>
+        <div>
+          <label class="label-caption text-muted">平台主页链接</label>
+          <input type="url" name="social_url" value="{{ old('social_url', $entrepreneur->social_url) }}"
+                 placeholder="https://…" class="input-line">
+          @error('social_url') <p class="field-error">{{ $message }}</p> @enderror
+        </div>
+      </div>
+
       <button type="submit" class="btn-ink">保存修改</button>
     </form>
   @endif
-
-  <form method="POST" action="{{ route('logout') }}"
-        onsubmit="return confirm('确认退出当前账户？')"
-        class="mt-12 pt-8 border-t border-hairline flex items-center justify-between gap-4 flex-wrap">
-    @csrf
-    <div>
-      <p class="label-caption text-muted">ACCOUNT</p>
-      <p class="mt-1 text-sm text-ink-soft">退出后需要重新登录才能管理你的档案。</p>
-    </div>
-    <button type="submit" class="btn-outline !py-2 !px-5 text-status-danger">退出账户</button>
-  </form>
 </div>
 <script>
   window.cityPicker = function (cities, initial) {

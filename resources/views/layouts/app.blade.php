@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', \App\Models\Setting::get('site_name', 'SIGNIFY'))</title>
   <meta name="description" content="{{ \App\Models\Setting::get('site_description', '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。') }}">
