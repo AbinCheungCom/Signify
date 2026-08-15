@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', $entrepreneur->name.' — SIGNIFY')
+@section('title', $entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY'))
 
 {{-- 分享卡片：图片用该企业家上传的头像；无头像时不覆盖 og-image，回退到系统设置的全局分享图 --}}
-@section('og-title', e($entrepreneur->name.' — SIGNIFY'))
-@section('og-description', e(\Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: '每一份引领行业的商业远见，都值得被更广泛地看见'), 80)))
+@section('og-title', e($entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY')))
+@section('og-description', e(\Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: \App\Models\Setting::get('site_description', '每一份引领行业的商业远见，都值得被更广泛地看见')), 80)))
 @section('og-url', route('entrepreneurs.show', $entrepreneur->id))
 @if($entrepreneur->portrait || $entrepreneur->avatar)
   @section('og-image', url('storage/'.($entrepreneur->portrait ?? $entrepreneur->avatar)))

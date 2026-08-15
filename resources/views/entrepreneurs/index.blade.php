@@ -5,7 +5,7 @@
 @section('content')
 
 <section class="max-w-7xl mx-auto px-6 pt-16 pb-10">
-  <p class="label-caption text-accent mb-4">SIGNIFY · ENTREPRENEURS</p>
+  <p class="label-caption text-accent mb-4">{{ \App\Models\Setting::get('site_name', 'SIGNIFY') }} · ENTREPRENEURS</p>
   <h1 class="font-display text-display-lg font-black text-ink">智库</h1>
   <p class="mt-4 text-ink-soft max-w-2xl leading-relaxed">每一份引领行业的远见，都值得被看见。</p>
 </section>

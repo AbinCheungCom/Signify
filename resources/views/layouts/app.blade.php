@@ -71,7 +71,7 @@
        @keydown.escape.window="menuOpen = false"
        class="fixed inset-0 z-[200] bg-paper flex flex-col">
     <div class="flex items-center justify-between px-6 py-5 border-b border-hairline">
-      <span class="label-caption text-muted">SIGNIFY</span>
+      <span class="label-caption text-muted">{{ \App\Models\Setting::get('site_name', 'SIGNIFY') }}</span>
       <button type="button" @click="menuOpen = false" aria-label="关闭菜单"
               class="w-11 h-11 flex items-center justify-center text-ink hover:opacity-60 transition-opacity">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-6 h-6">

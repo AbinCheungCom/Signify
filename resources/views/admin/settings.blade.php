@@ -65,7 +65,7 @@
             <span x-show="sharePreview || {{ $values['share_image'] ? 'true' : 'false' }}"
                   class="absolute bottom-0 inset-x-0 bg-ink/60 text-paper text-[10px] text-center py-0.5">点击上传</span>
           </button>
-          <p class="text-xs text-muted">点击上传，按 1.91:1 裁剪为分享卡片图片（微信/社交 og:image 推荐比例）</p>
+          
         </div>
         <input type="file" name="share_image_file" x-ref="shareImageInput" class="hidden"
                accept="image/jpeg,image/png,image/gif,image/webp" @change="openShareCrop($event.target)">
