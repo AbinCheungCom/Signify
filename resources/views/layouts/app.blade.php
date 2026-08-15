@@ -30,6 +30,7 @@
   <meta name="twitter:image" content="@yield('og-image', \App\Models\Setting::get('share_image', asset('android-chrome-512x512.png')))">
 
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @stack('styles')
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
   <!-- 拉丁字体（Playfair/Inter）：国内节点优先，失败自动切谷歌；中文用系统字体 -->
@@ -141,6 +142,8 @@
       @endif
     </div>
   </footer>
+
+  @stack('scripts')
 
 </body>
 </html>

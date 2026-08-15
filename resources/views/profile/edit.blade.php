@@ -1,9 +1,16 @@
 @extends('layouts.app')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/cropper.min.css') }}">
+@endpush
+@push('scripts')
+  <script src="{{ asset('js/cropper.min.js') }}"></script>
+@endpush
+
 @section('title', '个人中心')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-6 py-16" x-data="{ applyModal: {{ $errors->has('reason') ? 'true' : 'false' }} }">
+<div class="max-w-4xl mx-auto px-6 py-16" x-data="profileUpload({{ $errors->has('reason') ? 'true' : 'false' }}, @js(old('social_url', $entrepreneur->social_url ?? '')))">
   <p class="label-caption text-accent mb-4">MY PROFILE</p>
   <h1 class="font-display text-display-lg font-black text-ink mb-10">个人中心</h1>
 
@@ -22,53 +29,13 @@
       </form>
     </div>
   @else
-    <div class="mb-8 border border-hairline bg-surface px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
-      <p class="text-sm text-ink-soft">
-        @if($entrepreneur->status === 'pending')
-          档案已提交；获「推荐」后进入智库。
-        @else
-          完善资料后可生成个人名片，方便分享。
-        @endif
-      </p>
-      <a href="{{ route('entrepreneurs.show', $entrepreneur->id) }}"
-         class="label-caption text-accent hover:opacity-70 transition-opacity flex-shrink-0">查看我的名片 →</a>
-    </div>
-    <div class="mb-8 flex items-center gap-4">
+    <p class="mb-4 text-sm text-ink-soft">
       @if($entrepreneur->status === 'pending')
-        <span class="border border-hairline px-3 py-1 text-xs text-status-warning">待审核</span>
-      @elseif($entrepreneur->status === 'approved')
-        <span class="border border-hairline px-3 py-1 text-xs text-status-success">已通过</span>
-      @elseif($entrepreneur->status === 'rejected')
-        <span class="border border-hairline px-3 py-1 text-xs text-status-danger">已拒绝</span>
+        档案已提交；获「推荐」后进入智库。
+      @else
+        完善资料后可生成个人名片，方便分享。
       @endif
-    </div>
-
-    {{-- 推荐申请状态区（姓名旁） --}}
-    @if($entrepreneur->status === 'approved')
-      @php
-        $cooldownUntil = $entrepreneur->featured_rejected_at?->addDays(\App\Models\Entrepreneur::FEATURED_COOLDOWN_DAYS);
-        $cooldownDays = $cooldownUntil && $cooldownUntil->isFuture()
-            ? (int) ceil($cooldownUntil->diffInSeconds(now()) / 86400)
-            : 0;
-        $canApply = !$entrepreneur->is_featured
-            && $entrepreneur->featured_request_status !== 'pending'
-            && (!$cooldownUntil || $cooldownUntil->isPast());
-      @endphp
-      <div class="mb-8 flex items-center gap-4">
-        @if($entrepreneur->is_featured)
-          <span class="border border-hairline px-3 py-1 text-xs text-status-success">已推荐</span>
-        @elseif($entrepreneur->featured_request_status === 'pending')
-          <span class="border border-hairline px-3 py-1 text-xs text-status-warning">推荐申请待审核</span>
-        @elseif($entrepreneur->featured_request_status === 'rejected' && !$canApply)
-          <span class="border border-hairline px-3 py-1 text-xs text-status-danger">
-            推荐申请未通过 · {{ $cooldownDays }} 天后可再次申请
-          </span>
-        @else
-          <button type="button" @click="applyModal = true"
-                  class="label-caption text-accent hover:opacity-70 transition-opacity">申请推荐 →</button>
-        @endif
-      </div>
-    @endif
+    </p>
 
     {{-- 申请理由弹窗 --}}
     <div x-show="applyModal" x-cloak @keydown.escape.window="applyModal = false"
@@ -93,35 +60,86 @@
       @csrf
       @method('PATCH')
 
-      <div>
-        <label class="label-caption text-muted">头像</label>
-        <div class="mt-3 flex items-center gap-6">
-          @if($entrepreneur->avatar)
-            <img src="{{ asset('storage/'.$entrepreneur->avatar) }}" alt="头像"
-                 class="w-24 h-24 rounded-full object-cover border border-hairline">
-          @endif
-          <input type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp" class="text-sm text-ink-soft">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <label class="label-caption text-muted">形象照</label>
+          <div class="mt-3">
+            <button type="button" @click="$refs.avatarInput.click()"
+                    class="w-24 h-24 border border-hairline overflow-hidden relative grid place-items-center
+                           {{ $entrepreneur->avatar ? '' : 'bg-ink/5' }} hover:opacity-80 transition-opacity"
+                    aria-label="上传形象照">
+              <img :src="avatarPreview || '{{ $entrepreneur->avatar ? asset('storage/'.$entrepreneur->avatar) : '' }}'"
+                   x-show="avatarPreview || {{ $entrepreneur->avatar ? 'true' : 'false' }}"
+                   class="w-full h-full object-cover" alt="形象照">
+              <span x-show="!(avatarPreview || {{ $entrepreneur->avatar ? 'true' : 'false' }})"
+                    class="label-caption text-muted">点击上传</span>
+              <span x-show="avatarPreview || {{ $entrepreneur->avatar ? 'true' : 'false' }}"
+                    class="absolute bottom-0 inset-x-0 bg-ink/60 text-paper text-[10px] text-center py-0.5">点击上传</span>
+            </button>
+          </div>
+          <input type="file" name="avatar" x-ref="avatarInput" class="hidden"
+                 accept="image/jpeg,image/png,image/gif,image/webp" @change="openCrop('avatar', $event.target)">
+          <input type="file" name="portrait" x-ref="portraitInput" class="hidden"
+                 accept="image/jpeg,image/png,image/gif,image/webp">
+          @error('avatar') <p class="field-error">{{ $message }}</p> @enderror
         </div>
-        @error('avatar') <p class="field-error">{{ $message }}</p> @enderror
+
+        <div>
+          <label class="label-caption text-muted">姓名</label>
+          <input type="text" name="name" value="{{ old('name', $entrepreneur->name) }}" class="input-line">
+          @error('name') <p class="field-error">{{ $message }}</p> @enderror
+        </div>
       </div>
 
-      <div>
-        <label class="label-caption text-muted">微信二维码</label>
-        <div class="mt-3 flex items-center gap-6">
-          @if($entrepreneur->wechat_qrcode)
-            <img src="{{ asset('storage/'.$entrepreneur->wechat_qrcode) }}" alt="微信二维码"
-                 class="w-24 h-24 object-contain border border-hairline">
+      {{-- 名片 / 状态 / 推荐：并列文本（上下线条） --}}
+      <div class="border-y border-hairline py-4 flex items-center justify-between gap-6 flex-wrap">
+        @if($entrepreneur->status === 'pending')
+          <span class="label-caption text-status-warning">待审核</span>
+        @elseif($entrepreneur->status === 'approved')
+          <span class="label-caption text-status-success">已收录</span>
+        @elseif($entrepreneur->status === 'rejected')
+          <span class="label-caption text-status-danger">已拒绝</span>
+        @endif
+        @if($entrepreneur->status === 'approved')
+          @php
+            $cooldownUntil = $entrepreneur->featured_rejected_at?->addDays(\App\Models\Entrepreneur::FEATURED_COOLDOWN_DAYS);
+            $cooldownDays = $cooldownUntil && $cooldownUntil->isFuture()
+                ? (int) ceil($cooldownUntil->diffInSeconds(now()) / 86400)
+                : 0;
+            $canApply = !$entrepreneur->is_featured
+                && $entrepreneur->featured_request_status !== 'pending'
+                && (!$cooldownUntil || $cooldownUntil->isPast());
+          @endphp
+          @if($entrepreneur->is_featured)
+            <span class="label-caption text-status-success">已推荐</span>
+          @elseif($entrepreneur->featured_request_status === 'pending')
+            <span class="label-caption text-status-warning">推荐待审核</span>
+          @elseif($entrepreneur->featured_request_status === 'rejected' && !$canApply)
+            <span class="label-caption text-status-danger">未通过 · {{ $cooldownDays }}天后</span>
+          @else
+            <button type="button" @click="applyModal = true"
+                    class="label-caption text-accent hover:opacity-70 transition-opacity">申请推荐 →</button>
           @endif
-          <input type="file" name="wechat_qrcode" accept="image/jpeg,image/png,image/gif,image/webp" class="text-sm text-ink-soft">
-        </div>
-        <p class="text-xs text-muted mt-2">名片上点击微信图标可展示此二维码，方便他人扫码添加。</p>
-        @error('wechat_qrcode') <p class="field-error">{{ $message }}</p> @enderror
+        @endif
+        <a href="{{ route('entrepreneurs.show', $entrepreneur->id) }}"
+           class="label-caption text-accent hover:opacity-70 transition-opacity">查看我的名片</a>
       </div>
 
-      <div>
-        <label class="label-caption text-muted">姓名</label>
-        <input type="text" name="name" value="{{ old('name', $entrepreneur->name) }}" class="input-line">
-        @error('name') <p class="field-error">{{ $message }}</p> @enderror
+      {{-- 裁剪弹窗：形象照 4:5 主裁自动派生 1:1；二维码 1:1 --}}
+      <div x-show="cropOpen" x-cloak @keydown.escape.window="cropOpen = false"
+           class="fixed inset-0 z-[300] bg-ink/60 backdrop-blur-sm grid place-items-center p-4"
+           @click.self="cropOpen = false">
+        <div class="bg-surface border border-hairline p-5 w-full max-w-2xl shadow-float
+                    flex flex-col max-h-[92vh]">
+          <p class="label-caption text-muted mb-4" x-text="cropType === 'qr' ? '裁剪二维码（1:1）' : '裁剪形象照（4:5）'"></p>
+          <div class="flex-1 overflow-hidden min-h-0">
+            <img x-ref="cropImg" class="max-w-full max-h-full w-auto mx-auto" alt="待裁剪图片">
+          </div>
+          <div class="mt-5 flex items-center justify-end gap-3 flex-shrink-0">
+            <button type="button" @click="cropOpen = false" class="label-caption text-muted hover:text-ink">取消</button>
+            <button type="button" @click="confirmCrop()" class="btn-ink !py-2 !px-5">确认裁剪</button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -201,31 +219,38 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8"
-           x-data="{ platform: @js(old('social_platform', $entrepreneur->social_platform ?? '')), icons: @js(\App\Models\Entrepreneur::socialIconMap()) }">
-        <div>
-          <label class="label-caption text-muted">社交平台</label>
-          <input type="text" name="social_platform" list="social-platforms"
-                 x-model="platform"
-                 value="{{ old('social_platform', $entrepreneur->social_platform) }}"
-                 placeholder="小红书 / 微博 / Instagram…" class="input-line">
-          <datalist id="social-platforms">
-            <option value="小红书"></option><option value="微博"></option>
-            <option value="抖音"></option><option value="脸书"></option>
-            <option value="Instagram"></option><option value="Telegram"></option>
-            <option value="WhatsApp"></option>
-          </datalist>
-          <img :src="'{{ asset('icons') }}/' + (icons[platform.trim().toLowerCase()] ?? 'google.svg')"
-               x-show="platform.trim() !== ''"
-               class="w-4 h-4 mt-2" :alt="platform">
-          @error('social_platform') <p class="field-error">{{ $message }}</p> @enderror
+      <div>
+        <label class="label-caption text-muted">社交平台主页</label>
+        <div class="flex items-center gap-3">
+          <img :src="'{{ asset('icons') }}/' + socialIconFromUrl(socialUrl)"
+               x-show="socialUrl.trim() !== ''"
+               class="w-5 h-5 flex-shrink-0 object-contain" alt="社交平台图标">
+          <input type="url" name="social_url" x-model="socialUrl"
+                 value="{{ old('social_url', $entrepreneur->social_url) }}"
+                 placeholder="https://… 粘贴你的社交主页链接" class="input-line">
         </div>
-        <div>
-          <label class="label-caption text-muted">平台主页链接</label>
-          <input type="url" name="social_url" value="{{ old('social_url', $entrepreneur->social_url) }}"
-                 placeholder="https://…" class="input-line">
-          @error('social_url') <p class="field-error">{{ $message }}</p> @enderror
+        @error('social_url') <p class="field-error">{{ $message }}</p> @enderror
+      </div>
+
+      <div>
+        <label class="label-caption text-muted">微信二维码</label>
+        <div class="mt-3 flex items-center gap-6">
+          <button type="button" @click="$refs.qrInput.click()"
+                  class="w-24 h-24 border border-hairline overflow-hidden relative grid place-items-center
+                         {{ $entrepreneur->wechat_qrcode ? '' : 'bg-ink/5' }} hover:opacity-80 transition-opacity"
+                  aria-label="上传微信二维码">
+            <img :src="qrPreview || '{{ $entrepreneur->wechat_qrcode ? asset('storage/'.$entrepreneur->wechat_qrcode) : '' }}'"
+                 x-show="qrPreview || {{ $entrepreneur->wechat_qrcode ? 'true' : 'false' }}"
+                 class="w-full h-full object-contain" alt="微信二维码">
+            <span x-show="!(qrPreview || {{ $entrepreneur->wechat_qrcode ? 'true' : 'false' }})"
+                  class="label-caption text-muted">点击上传</span>
+            <span x-show="qrPreview || {{ $entrepreneur->wechat_qrcode ? 'true' : 'false' }}"
+                  class="absolute bottom-0 inset-x-0 bg-ink/60 text-paper text-[10px] text-center py-0.5">点击上传</span>
+          </button>
         </div>
+        <input type="file" name="wechat_qrcode" x-ref="qrInput" class="hidden"
+               accept="image/jpeg,image/png,image/gif,image/webp" @change="openCrop('qr', $event.target)">
+        @error('wechat_qrcode') <p class="field-error">{{ $message }}</p> @enderror
       </div>
 
       <button type="submit" class="btn-ink">保存修改</button>
@@ -233,6 +258,118 @@
   @endif
 </div>
 <script>
+  window.profileUpload = function (applyModal, socialUrl) {
+    return {
+      applyModal: !!applyModal,
+      socialUrl: socialUrl || '',
+      cropType: null,
+      cropSrc: null,
+      cropOpen: false,
+      cropper: null,
+      avatarPreview: null,
+      qrPreview: null,
+
+      // 按网址域名识别社交平台图标（未知域名回退默认 google.svg）
+      socialIconFromUrl(url) {
+        const host = (url || '').toLowerCase();
+        const map = {
+          'abincheung.com': 'logo.svg',
+          'foxfun.cn': 'logo.svg',
+          '61ml.com': 'logo.svg',
+          'voue.cn': 'logo.svg',
+          'vour.cn': 'logo.svg',
+          'ihote.com': 'logo.svg',
+          '61lm.com': 'logo.svg',
+          'xiaohongshu.com': 'xiaohongshu.svg',
+          'weibo.com': 'weibo.svg',
+          'weibo.cn': 'weibo.svg',
+          'douyin.com': 'douyin.svg',
+          'facebook.com': 'facebook.svg',
+          'fb.com': 'facebook.svg',
+          'instagram.com': 'instagram.svg',
+          'telegram.me': 'telegram.svg',
+          't.me': 'telegram.svg',
+          'whatsapp.com': 'whatsapp.svg',
+          'wa.me': 'whatsapp.svg',
+        };
+        let icon = 'google.svg';
+        Object.keys(map).some(function (k) {
+          // 边界匹配：主域或子域名，避免仿冒域名误判
+          if (host === k || host.endsWith('.' + k)) { icon = map[k]; return true; }
+          return false;
+        });
+        return icon;
+      },
+
+      // 打开裁剪弹窗（type: 'avatar' | 'qr'）
+      openCrop(type, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        const self = this;
+        reader.onload = function (e) {
+          input.value = ''; // 取消裁剪时不影响原图
+          self.cropType = type;
+          self.cropSrc = e.target.result;
+          self.cropOpen = true;
+          self.$nextTick(function () { self.initCropper(); });
+        };
+        reader.readAsDataURL(file);
+      },
+
+      // 初始化 Cropper（头像 4:5 主裁；二维码 1:1）
+      initCropper() {
+        const img = this.$refs.cropImg;
+        if (!img) return;
+        if (this.cropper) this.cropper.destroy();
+        img.onload = () => {
+          this.cropper = new Cropper(img, {
+            aspectRatio: this.cropType === 'qr' ? 1 : 4 / 5,
+            viewMode: 1,
+            autoCropArea: 1,
+          });
+        };
+        img.src = this.cropSrc;
+      },
+
+      // 确认裁剪：头像类输出 4:5 形象照 + 自动派生 1:1 头像；二维码输出 1:1
+      confirmCrop() {
+        if (!this.cropper) return;
+        const img = this.$refs.cropImg;
+        const data = this.cropper.getData();
+
+        if (this.cropType === 'qr') {
+          const canvas = this.cropper.getCroppedCanvas({ width: 512, height: 512 });
+          this.setFile('qrInput', canvas, 'qrPreview');
+        } else {
+          // 形象照 4:5 → 800×1000
+          const portraitCanvas = this.cropper.getCroppedCanvas({ width: 800, height: 1000 });
+          this.setFile('portraitInput', portraitCanvas, null);
+          // 头像 1:1 → 取 4:5 框内中心方区缩放 512（与形象照同构图）
+          const side = data.width;
+          const sqY = data.y + (data.height - side) / 2;
+          const avatarCanvas = document.createElement('canvas');
+          avatarCanvas.width = avatarCanvas.height = 512;
+          avatarCanvas.getContext('2d').drawImage(img, data.x, sqY, side, side, 0, 0, 512, 512);
+          this.setFile('avatarInput', avatarCanvas, 'avatarPreview');
+        }
+        this.cropOpen = false;
+      },
+
+      // 裁剪产物写入隐藏 file input（DataTransfer），随表单原子提交
+      setFile(refName, canvas, previewKey) {
+        const self = this;
+        canvas.toBlob(function (blob) {
+          const file = new File([blob], 'crop.jpg', { type: 'image/jpeg' });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          self.$refs[refName].files = dt.files;
+          if (previewKey) self[previewKey] = canvas.toDataURL('image/jpeg');
+        }, 'image/jpeg', 0.9);
+      }
+    };
+  };
+
   window.cityPicker = function (cities, initial) {
     return {
       open: false,

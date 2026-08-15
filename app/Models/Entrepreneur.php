@@ -18,6 +18,7 @@ class Entrepreneur extends Model
         'name',
         'title',
         'avatar',
+        'portrait',
         'industry',
         'city',
         'bio',
@@ -110,34 +111,43 @@ class Entrepreneur extends Model
     }
 
     /**
-     * 社交平台 → 黑色图标文件映射表
-     * 兼容中英文平台名（统一转小写后匹配）
+     * 社交平台网址 → 黑色图标文件名（按域名识别；未知域名回退默认 google.svg）
      */
-    public static function socialIconMap(): array
+    public static function socialIconForUrl(?string $url): string
     {
-        return [
-            '小红书' => 'xiaohongshu.svg',
-            'xiaohongshu' => 'xiaohongshu.svg',
-            'red' => 'xiaohongshu.svg',
-            '微博' => 'weibo.svg',
-            'weibo' => 'weibo.svg',
-            '抖音' => 'douyin.svg',
-            'douyin' => 'douyin.svg',
-            '脸书' => 'facebook.svg',
-            'facebook' => 'facebook.svg',
-            'instagram' => 'instagram.svg',
-            'telegram' => 'telegram.svg',
-            'whatsapp' => 'whatsapp.svg',
+        if (!$url) {
+            return 'google.svg';
+        }
+
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $map = [
+            'abincheung.com' => 'logo.svg',
+            'foxfun.cn' => 'logo.svg',
+            '61ml.com' => 'logo.svg',
+            'voue.cn' => 'logo.svg',
+            'vour.cn' => 'logo.svg',
+            'ihote.com' => 'logo.svg',
+            '61lm.com' => 'logo.svg',
+            'xiaohongshu.com' => 'xiaohongshu.svg',
+            'weibo.com' => 'weibo.svg',
+            'weibo.cn' => 'weibo.svg',
+            'douyin.com' => 'douyin.svg',
+            'facebook.com' => 'facebook.svg',
+            'fb.com' => 'facebook.svg',
+            'instagram.com' => 'instagram.svg',
+            'telegram.me' => 'telegram.svg',
+            't.me' => 'telegram.svg',
+            'whatsapp.com' => 'whatsapp.svg',
+            'wa.me' => 'whatsapp.svg',
         ];
-    }
 
-    /**
-     * 解析平台名对应的图标文件名；范围外平台回退默认 google.svg
-     */
-    public static function socialIconFile(?string $platform): string
-    {
-        $key = strtolower(trim((string) $platform));
+        foreach ($map as $domain => $file) {
+            // 边界匹配：主域本身或子域名（xxx.domain.com）才命中，避免仿冒域名误判
+            if ($host === $domain || str_ends_with($host, '.'.$domain)) {
+                return $file;
+            }
+        }
 
-        return self::socialIconMap()[$key] ?? 'google.svg';
+        return 'google.svg';
     }
 }

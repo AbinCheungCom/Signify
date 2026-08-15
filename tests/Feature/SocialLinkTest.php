@@ -12,7 +12,7 @@ class SocialLinkTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 本人可保存社交平台 + 网址
+     * 本人可保存社交主页网址
      */
     public function test_user_can_update_social_link(): void
     {
@@ -22,14 +22,12 @@ class SocialLinkTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->patch('/my/profile', [
-            'social_platform' => '小红书',
             'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('entrepreneurs', [
             'id' => $entrepreneur->id,
-            'social_platform' => '小红书',
             'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
         ]);
     }
@@ -52,13 +50,12 @@ class SocialLinkTest extends TestCase
     }
 
     /**
-     * 名片展示社交图标与链接
+     * 名片按域名识别展示社交图标与链接
      */
     public function test_card_shows_social_icon_link(): void
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_platform' => '小红书',
             'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
         ]);
 
@@ -70,47 +67,12 @@ class SocialLinkTest extends TestCase
     }
 
     /**
-     * 范围外平台使用默认 google 图标
+     * 域名识别：weibo.com 匹配微博图标
      */
-    public function test_unknown_platform_uses_default_icon(): void
+    public function test_domain_maps_to_weibo_icon(): void
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_platform' => '火星社区',
-            'social_url' => 'https://example.com',
-        ]);
-
-        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
-
-        $response->assertStatus(200);
-        $response->assertSee('icons/google.svg');
-    }
-
-    /**
-     * 未设置社交链接时不渲染图标
-     */
-    public function test_card_hides_social_icon_when_no_url(): void
-    {
-        $entrepreneur = Entrepreneur::factory()->create([
-            'status' => Entrepreneur::STATUS_APPROVED,
-            'social_platform' => '小红书',
-            'social_url' => null,
-        ]);
-
-        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
-
-        $response->assertStatus(200);
-        $response->assertDontSee('icons/xiaohongshu.svg');
-    }
-
-    /**
-     * 中文平台的英文别名也能匹配对应图标
-     */
-    public function test_english_alias_matches_icon(): void
-    {
-        $entrepreneur = Entrepreneur::factory()->create([
-            'status' => Entrepreneur::STATUS_APPROVED,
-            'social_platform' => 'weibo',
             'social_url' => 'https://weibo.com/u/123',
         ]);
 
@@ -121,13 +83,44 @@ class SocialLinkTest extends TestCase
     }
 
     /**
+     * 域名识别：微博手机域名 weibo.cn 也匹配微博图标
+     */
+    public function test_domain_maps_weibo_cn_to_icon(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => 'https://m.weibo.cn/u/123',
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('icons/weibo.svg');
+    }
+
+    /**
+     * 未知域名使用默认 google 图标
+     */
+    public function test_unknown_domain_uses_default_icon(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => 'https://example.com',
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('icons/google.svg');
+    }
+
+    /**
      * 非 http(s) 协议不渲染可点击链接（协议白名单）
      */
     public function test_non_http_scheme_not_linked(): void
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_platform' => '小红书',
             'social_url' => 'ftp://example.com',
         ]);
 
@@ -135,6 +128,71 @@ class SocialLinkTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertDontSee('ftp://example.com');
+        $response->assertDontSee('icons/google.svg');
+    }
+
+    /**
+     * 品牌域名使用 logo 图标
+     */
+    public function test_brand_domain_uses_logo_icon(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => 'https://www.abincheung.com/about',
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('icons/logo.svg');
+    }
+
+    /**
+     * 品牌子域名（xxx.abincheung.com 等）同样使用 logo 图标
+     */
+    public function test_brand_subdomain_uses_logo_icon(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => 'https://xxx.61ml.com/about',
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('icons/logo.svg');
+    }
+
+    /**
+     * 仿冒域名（结尾非主域）不命中品牌 logo，回退默认图标
+     */
+    public function test_lookalike_domain_not_matched(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => 'https://www.61lm.com.cn/about',
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
+        $response->assertSee('icons/google.svg');
+        $response->assertDontSee('icons/logo.svg');
+    }
+
+    /**
+     * 未设置社交链接时不渲染图标
+     */
+    public function test_card_hides_social_icon_when_no_url(): void
+    {
+        $entrepreneur = Entrepreneur::factory()->create([
+            'status' => Entrepreneur::STATUS_APPROVED,
+            'social_url' => null,
+        ]);
+
+        $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
+
+        $response->assertStatus(200);
         $response->assertDontSee('icons/xiaohongshu.svg');
     }
 }

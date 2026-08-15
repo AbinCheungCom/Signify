@@ -6,8 +6,8 @@
 @section('og-title', e($entrepreneur->name.' — SIGNIFY'))
 @section('og-description', e(\Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: '每一份引领行业的商业远见，都值得被更广泛地看见'), 80)))
 @section('og-url', route('entrepreneurs.show', $entrepreneur->id))
-@if($entrepreneur->avatar)
-  @section('og-image', url('storage/'.$entrepreneur->avatar))
+@if($entrepreneur->portrait || $entrepreneur->avatar)
+  @section('og-image', url('storage/'.($entrepreneur->portrait ?? $entrepreneur->avatar)))
 @endif
 
 @section('content')
@@ -15,8 +15,8 @@
 <div class="max-w-7xl mx-auto px-6 py-16">
   <article class="mt-10 grid grid-cols-1 md:grid-cols-5 gap-12">
     <div class="md:col-span-2">
-      @if($entrepreneur->avatar)
-        <img src="{{ asset('storage/'.$entrepreneur->avatar) }}" alt="{{ $entrepreneur->name }}"
+      @if($entrepreneur->portrait || $entrepreneur->avatar)
+        <img src="{{ asset('storage/'.($entrepreneur->portrait ?? $entrepreneur->avatar)) }}" alt="{{ $entrepreneur->name }}"
              class="w-full aspect-[4/5] object-cover border border-hairline">
       @else
         <div class="w-full aspect-[4/5] bg-ink/5 border border-hairline flex items-center justify-center">
@@ -68,9 +68,9 @@
           @endif
           @if($entrepreneur->social_url && \Illuminate\Support\Str::startsWith($entrepreneur->social_url, ['http://', 'https://']))
             <a href="{{ e($entrepreneur->social_url) }}" target="_blank" rel="noopener"
-               class="text-ink hover:opacity-60 transition-opacity" title="{{ $entrepreneur->social_platform }}">
-              <img src="{{ asset('icons/'.\App\Models\Entrepreneur::socialIconFile($entrepreneur->social_platform)) }}"
-                   class="w-6 h-6" alt="{{ $entrepreneur->social_platform }}">
+               class="text-ink hover:opacity-60 transition-opacity" title="{{ parse_url($entrepreneur->social_url, PHP_URL_HOST) }}">
+              <img src="{{ asset('icons/'.\App\Models\Entrepreneur::socialIconForUrl($entrepreneur->social_url)) }}"
+                   class="w-6 h-6 object-contain" alt="{{ parse_url($entrepreneur->social_url, PHP_URL_HOST) }}">
             </a>
           @endif
 

@@ -42,7 +42,7 @@ class MyProfileController extends Controller
         $data = $request->validated();
 
         // 文件字段由下方单独处理（避免空文件输入把已有图片清空）
-        unset($data['avatar'], $data['wechat_qrcode']);
+        unset($data['avatar'], $data['wechat_qrcode'], $data['portrait']);
 
         // 头像：先校验并存储新图，成功后再删旧图（失败不误删）
         if ($request->hasFile('avatar')) {
@@ -54,6 +54,12 @@ class MyProfileController extends Controller
         if ($request->hasFile('wechat_qrcode')) {
             $data['wechat_qrcode'] = $avatarService->store($request->file('wechat_qrcode'), 'qrcodes');
             $avatarService->delete($entrepreneur->wechat_qrcode);
+        }
+
+        // 形象照（4:5 名片主图）：裁剪时与头像同源自动派生
+        if ($request->hasFile('portrait')) {
+            $data['portrait'] = $avatarService->store($request->file('portrait'), 'portraits');
+            $avatarService->delete($entrepreneur->portrait);
         }
 
         // 直接 update：文本字段为空时（null）即清空生效

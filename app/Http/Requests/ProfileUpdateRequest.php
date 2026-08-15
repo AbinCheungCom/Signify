@@ -27,12 +27,12 @@ class ProfileUpdateRequest extends FormRequest
             'name' => 'sometimes|string|max:100',
             'title' => 'sometimes|string|max:100|nullable',
             'avatar' => ['sometimes', 'file', 'max:2048'],
+            'portrait' => ['sometimes', 'file', 'max:2048'],
             'industry' => 'sometimes|string|max:100|nullable',
             'city' => 'sometimes|string|max:100|nullable',
             'bio' => 'sometimes|string|max:500|nullable',
             'contact_phone' => 'sometimes|string|max:20|nullable',
             'contact_email' => 'sometimes|email|max:100|nullable',
-            'social_platform' => 'sometimes|string|max:50|nullable',
             'social_url' => 'sometimes|url|max:500|nullable',
             'wechat_qrcode' => ['sometimes', 'file', 'max:2048'],
         ];
