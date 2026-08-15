@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileCreateRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Entrepreneur;
 use App\Services\AvatarService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MyProfileController extends Controller
@@ -77,5 +78,52 @@ class MyProfileController extends Controller
         ]);
 
         return redirect()->route('profile.show')->with('success', '档案创建成功！');
+    }
+
+    /**
+     * 发起推荐申请
+     * 需填写申请理由；被拒后 15 天冷却期内不可再申请
+     */
+    public function requestFeatured(Request $request)
+    {
+        $entrepreneur = Auth::user()->entrepreneur;
+
+        if (!$entrepreneur) {
+            return redirect()->back()->with('error', '您尚未创建企业家档案');
+        }
+
+        $this->authorize('requestFeatured', $entrepreneur);
+
+        // 认证门槛：仅已通过认证的档案可申请推荐
+        if ($entrepreneur->status !== Entrepreneur::STATUS_APPROVED) {
+            return redirect()->back()->with('error', '档案通过认证后方可申请推荐');
+        }
+        if ($entrepreneur->is_featured) {
+            return redirect()->back()->with('error', '您已是推荐企业家');
+        }
+        if ($entrepreneur->featured_request_status === Entrepreneur::FEATURED_STATUS_PENDING) {
+            return redirect()->back()->with('error', '您的推荐申请正在审核中');
+        }
+
+        // 冷却期：被拒后 15 天内不可再申请
+        $cooldownUntil = $entrepreneur->featured_rejected_at?->addDays(Entrepreneur::FEATURED_COOLDOWN_DAYS);
+        if ($cooldownUntil && $cooldownUntil->isFuture()) {
+            $days = $cooldownUntil->diffInDays(now()) + 1;
+            return redirect()->back()->with('error', "推荐申请被拒后需等待 {$days} 天后再次申请");
+        }
+
+        // 申请理由必填
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $entrepreneur->update([
+            'featured_request_status' => Entrepreneur::FEATURED_STATUS_PENDING,
+            'featured_requested_at'   => now(),
+            'featured_reason'         => $data['reason'],
+            'featured_rejected_at'    => null,
+        ]);
+
+        return redirect()->back()->with('success', '推荐申请已提交，请等待管理员审核');
     }
 }

@@ -24,6 +24,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my/profile', [MyProfileController::class, 'show'])->name('profile.show');
     Route::patch('/my/profile', [MyProfileController::class, 'update'])->name('profile.update');
     Route::post('/my/profile', [MyProfileController::class, 'create'])->name('profile.create');
+
+    // 推荐申请
+    Route::post('/my/profile/featured-request', [MyProfileController::class, 'requestFeatured'])->name('profile.featured-request');
 });
 
 /*
@@ -40,6 +43,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/entrepreneurs/{entrepreneur}/reject', [AdminController::class, 'reject'])->name('reject');
     Route::post('/entrepreneurs/{entrepreneur}/toggle-featured', [AdminController::class, 'toggleFeatured'])->name('toggle-featured');
     Route::delete('/entrepreneurs/{entrepreneur}', [AdminController::class, 'destroy'])->name('destroy');
+
+    // 推荐申请审核
+    Route::post('/featured-requests/{entrepreneur}/approve', [AdminController::class, 'approveFeatured'])->name('featured-approve');
+    Route::post('/featured-requests/{entrepreneur}/reject', [AdminController::class, 'rejectFeatured'])->name('featured-reject');
+
+    // 系统设置
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
 });
 
 require __DIR__.'/auth.php';

@@ -3,7 +3,7 @@
 @section('title', '个人中心')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-6 py-16">
+<div class="max-w-4xl mx-auto px-6 py-16" x-data="{ applyModal: {{ $errors->has('reason') ? 'true' : 'false' }} }">
   <p class="label-caption text-accent mb-4">MY PROFILE</p>
   <h1 class="font-display text-display-lg font-black text-ink mb-10">个人中心</h1>
 
@@ -41,6 +41,51 @@
       @elseif($entrepreneur->status === 'rejected')
         <span class="border border-hairline px-3 py-1 text-xs text-status-danger">已拒绝</span>
       @endif
+    </div>
+
+    {{-- 推荐申请状态区（姓名旁） --}}
+    @if($entrepreneur->status === 'approved')
+      @php
+        $cooldownUntil = $entrepreneur->featured_rejected_at?->addDays(\App\Models\Entrepreneur::FEATURED_COOLDOWN_DAYS);
+        $cooldownDays = $cooldownUntil && $cooldownUntil->isFuture()
+            ? (int) ceil($cooldownUntil->diffInSeconds(now()) / 86400)
+            : 0;
+        $canApply = !$entrepreneur->is_featured
+            && $entrepreneur->featured_request_status !== 'pending'
+            && (!$cooldownUntil || $cooldownUntil->isPast());
+      @endphp
+      <div class="mb-8 flex items-center gap-4">
+        @if($entrepreneur->is_featured)
+          <span class="border border-hairline px-3 py-1 text-xs text-status-success">已推荐</span>
+        @elseif($entrepreneur->featured_request_status === 'pending')
+          <span class="border border-hairline px-3 py-1 text-xs text-status-warning">推荐申请待审核</span>
+        @elseif($entrepreneur->featured_request_status === 'rejected' && !$canApply)
+          <span class="border border-hairline px-3 py-1 text-xs text-status-danger">
+            推荐申请未通过 · {{ $cooldownDays }} 天后可再次申请
+          </span>
+        @else
+          <button type="button" @click="applyModal = true"
+                  class="label-caption text-accent hover:opacity-70 transition-opacity">申请推荐 →</button>
+        @endif
+      </div>
+    @endif
+
+    {{-- 申请理由弹窗 --}}
+    <div x-show="applyModal" x-cloak @keydown.escape.window="applyModal = false"
+         class="fixed inset-0 z-[300] bg-ink/60 backdrop-blur-sm grid place-items-center p-6"
+         @click.self="applyModal = false">
+      <form method="POST" action="{{ route('profile.featured-request') }}"
+            class="bg-surface border border-hairline p-8 w-full max-w-md shadow-float">
+        @csrf
+        <p class="label-caption text-muted mb-4">推荐申请</p>
+        <label class="label-caption text-muted">申请理由</label>
+        <textarea name="reason" rows="4" required placeholder="请简要说明申请推荐的理由" class="input-line resize-none"></textarea>
+        @error('reason') <p class="field-error">{{ $message }}</p> @enderror
+        <div class="mt-6 flex items-center gap-3 justify-end">
+          <button type="button" @click="applyModal = false" class="label-caption text-muted hover:text-ink">取消</button>
+          <button type="submit" class="btn-ink !py-2 !px-5">提交申请</button>
+        </div>
+      </form>
     </div>
 
     <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data"
@@ -159,6 +204,17 @@
       <button type="submit" class="btn-ink">保存修改</button>
     </form>
   @endif
+
+  <form method="POST" action="{{ route('logout') }}"
+        onsubmit="return confirm('确认退出当前账户？')"
+        class="mt-12 pt-8 border-t border-hairline flex items-center justify-between gap-4 flex-wrap">
+    @csrf
+    <div>
+      <p class="label-caption text-muted">ACCOUNT</p>
+      <p class="mt-1 text-sm text-ink-soft">退出后需要重新登录才能管理你的档案。</p>
+    </div>
+    <button type="submit" class="btn-outline !py-2 !px-5 text-status-danger">退出账户</button>
+  </form>
 </div>
 <script>
   window.cityPicker = function (cities, initial) {

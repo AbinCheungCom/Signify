@@ -65,6 +65,24 @@ class EntrepreneurPolicy
     }
 
     /**
+     * 用户是否可以发起自己的推荐申请
+     * 原则：仅本人可申请
+     */
+    public function requestFeatured(User $user, Entrepreneur $entrepreneur): bool
+    {
+        return $user->id === $entrepreneur->user_id;
+    }
+
+    /**
+     * 用户是否可以审核推荐申请
+     * 原则：仅管理员可操作
+     */
+    public function reviewFeatured(User $user, Entrepreneur $entrepreneur): bool
+    {
+        return $user->is_admin;
+    }
+
+    /**
      * 用户是否可以管理（管理员操作）
      */
     public function manage(User $user): bool

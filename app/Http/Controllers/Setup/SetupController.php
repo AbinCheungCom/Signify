@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Setup;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -108,6 +109,10 @@ class SetupController extends Controller
 
             // 4. 创建管理员账号
             $this->createAdmin($data);
+
+            // 4.1 写入初始系统设置（站点名称）
+            Setting::updateOrCreate(['key' => 'site_name'], ['value' => $data['app_name']]);
+            Setting::flush();
 
             // 5. 创建存储链接
             try {

@@ -5,21 +5,33 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BatchActionRequest;
 use App\Models\Entrepreneur;
+use App\Models\Setting;
+use App\Services\AvatarService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
     /**
-     * 管理员后台首页 - 待审核列表
+     * 管理员后台首页 - 待审核列表（认证申请 / 推荐申请）
      */
     public function dashboard()
     {
         $pending = Entrepreneur::where('status', Entrepreneur::STATUS_PENDING)
             ->with('user')
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
+
+        $featuredPending = Entrepreneur::featuredPending()
+            ->with('user')
+            ->latest('featured_requested_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        $featuredPendingCount = Entrepreneur::featuredPending()->count();
 
         // P1优化：合并4次count为一次子查询
         $statsRaw = Entrepreneur::selectRaw("
@@ -34,10 +46,12 @@ class AdminController extends Controller
             'pending' => (int) $statsRaw->pending,
             'approved' => (int) $statsRaw->approved,
             'rejected' => (int) $statsRaw->rejected,
+            'featuredPending' => $featuredPendingCount,
         ];
 
         return view('admin.dashboard', [
             'pending' => $pending,
+            'featuredPending' => $featuredPending,
             'stats' => $stats,
         ]);
     }
@@ -86,15 +100,52 @@ class AdminController extends Controller
 
     /**
      * 设为推荐 / 取消推荐（Policy验证）
+     * 同步推荐申请状态：设为推荐 → approved；取消推荐 → 重置为 null（允许重新申请）
      */
     public function toggleFeatured(Entrepreneur $entrepreneur)
     {
         $this->authorize('toggleFeatured', $entrepreneur);
 
-        $entrepreneur->update(['is_featured' => !$entrepreneur->is_featured]);
+        $next = !$entrepreneur->is_featured;
+        $entrepreneur->update([
+            'is_featured' => $next,
+            'featured_request_status' => $next ? Entrepreneur::FEATURED_STATUS_APPROVED : null,
+            'featured_rejected_at' => null,
+        ]);
 
-        $status = $entrepreneur->is_featured ? '设为推荐' : '取消推荐';
+        $status = $next ? '设为推荐' : '取消推荐';
         return redirect()->back()->with('success', "已将 {$entrepreneur->name} {$status}");
+    }
+
+    /**
+     * 通过推荐申请 → 设为推荐（进入智库）（Policy验证）
+     */
+    public function approveFeatured(Entrepreneur $entrepreneur)
+    {
+        $this->authorize('reviewFeatured', $entrepreneur);
+
+        $entrepreneur->update([
+            'is_featured' => true,
+            'featured_request_status' => Entrepreneur::FEATURED_STATUS_APPROVED,
+            'featured_rejected_at' => null,
+        ]);
+
+        return redirect()->back()->with('success', "已通过 {$entrepreneur->name} 的推荐申请");
+    }
+
+    /**
+     * 拒绝推荐申请（写入拒绝时间，作为 15 天冷却期起点）（Policy验证）
+     */
+    public function rejectFeatured(Entrepreneur $entrepreneur)
+    {
+        $this->authorize('reviewFeatured', $entrepreneur);
+
+        $entrepreneur->update([
+            'featured_request_status' => Entrepreneur::FEATURED_STATUS_REJECTED,
+            'featured_rejected_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', "已拒绝 {$entrepreneur->name} 的推荐申请");
     }
 
     /**
@@ -156,5 +207,72 @@ class AdminController extends Controller
         });
 
         return redirect()->back()->with('success', "已批量拒绝 {$rejectedCount} 条申请");
+    }
+
+    /**
+     * 系统设置页
+     */
+    public function settings()
+    {
+        $values = Setting::get(); // 全量
+        $defaults = $this->settingDefaults();
+
+        return view('admin.settings', [
+            'values' => array_merge($defaults, $values ?: []),
+        ]);
+    }
+
+    /**
+     * 保存系统设置
+     */
+    public function updateSettings(Request $request, AvatarService $avatarService)
+    {
+        $data = $request->validate([
+            'site_name'         => 'required|string|max:100',
+            'site_description'  => 'nullable|string|max:500',
+            'share_title'       => 'nullable|string|max:200',
+            'share_description' => 'nullable|string|max:500',
+            'share_image'       => 'nullable|url|max:500',
+            'share_image_file'  => 'nullable|file|max:2048',
+            'footer_copyright'  => 'nullable|string|max:200',
+            'icp_number'        => 'nullable|string|max:100',
+        ]);
+
+        unset($data['share_image_file']);
+
+        // 上传优先：选择了图片文件则覆盖 share_image（复用 AvatarService，兼容缺 fileinfo）
+        if ($request->hasFile('share_image_file')) {
+            try {
+                $data['share_image'] = url('storage/' . $avatarService->store($request->file('share_image_file'), 'settings'));
+            } catch (ValidationException $e) {
+                throw ValidationException::withMessages([
+                    'share_image_file' => $e->errors()['avatar'][0] ?? '图片格式不支持',
+                ]);
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            // 空字符串存为 null，使 Setting::get 的 ?? 兜底默认值生效（如清空分享图/备案号）
+            Setting::updateOrCreate(['key' => $key], ['value' => $value === '' ? null : $value]);
+        }
+        Setting::flush();
+
+        return redirect()->route('admin.settings')->with('success', '系统设置已保存');
+    }
+
+    /**
+     * 设置项默认值
+     */
+    private function settingDefaults(): array
+    {
+        return [
+            'site_name'         => 'SIGNIFY',
+            'site_description'  => '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。',
+            'share_title'       => 'SIGNIFY — 每一份引领行业的商业远见，都值得被更广泛地看见',
+            'share_description' => '不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。',
+            'share_image'       => asset('android-chrome-512x512.png'),
+            'footer_copyright'  => '© SIGNIFY',
+            'icp_number'        => '',
+        ];
     }
 }

@@ -26,6 +26,10 @@ class Entrepreneur extends Model
         'wechat_qrcode',
         'is_featured',
         'status',
+        'featured_request_status',
+        'featured_reason',
+        'featured_requested_at',
+        'featured_rejected_at',
     ];
 
     /**
@@ -33,6 +37,8 @@ class Entrepreneur extends Model
      */
     protected $casts = [
         'is_featured' => 'boolean',
+        'featured_requested_at' => 'datetime',
+        'featured_rejected_at' => 'datetime',
     ];
 
     /**
@@ -41,6 +47,14 @@ class Entrepreneur extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+
+    /**
+     * 推荐申请状态常量
+     */
+    const FEATURED_STATUS_PENDING = 'pending';
+    const FEATURED_STATUS_APPROVED = 'approved';
+    const FEATURED_STATUS_REJECTED = 'rejected';
+    const FEATURED_COOLDOWN_DAYS = 15; // 被拒后冷却天数
 
     /**
      * 获取关联的用户
@@ -64,6 +78,14 @@ class Entrepreneur extends Model
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);
+    }
+
+    /**
+     * 作用域：待审核的推荐申请
+     */
+    public function scopeFeaturedPending($query)
+    {
+        return $query->where('featured_request_status', self::FEATURED_STATUS_PENDING);
     }
 
     /**
