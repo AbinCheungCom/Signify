@@ -1,26 +1,27 @@
 # Signify · Hermes 交接文档
 
 > 交接对象：**Hermes**（下一轮协作方）
-> 交接时间：2026-08-14
-> 仓库：`https://github.com/AbinCheungCom/Signify`
-> 分支：`main`（已与 `origin/main` 同步，HEAD = `ef498bb`）
-> 技术栈：Laravel 11 + Blade + Alpine.js + 静态 Tailwind（服务器零构建）
+> 交接时间：2026-08-15
+> 仓库：`https://github.com/Abinius/Signify`（原 AbinCheungCom 已迁移）
+> 分支：`main`（已与 `origin/main` 同步，HEAD = `63086b7`）
+> 技术栈：Laravel 11 + Blade + Alpine.js + 静态 Tailwind + Cropper.js（服务器零构建）
+> 官方站点：https://vour.cn
 
 ---
 
-## 1. 本会话改动（提交链 `e27dd23 → ef498bb`）
+## 1. 本会话改动（提交链 `ef498bb → 63086b7`）
 
 | commit | 内容 | 涉及文件 |
 |---|---|---|
-| `e27dd23` | **城市选择器**：港澳台置底、手机端全屏展示、定位按钮换 SVG 图标 | `config/cities.php`、`resources/views/profile/edit.blade.php`、`public/js/geolocate.min.js`、`public/icon/dingwei.svg`、`public/css/app.css` |
-| `95ea0be` | **简介 `&quot;` 实体双重编码修复**：数据修复迁移 + og-meta 转义（此提交含一个会导致 500 的写法，已被下方 `ecd5986` 撤销） | `database/migrations/2026_08_14_000001_fix_entrepreneur_html_entities.php`、`layouts/app.blade.php` |
-| `ecd5986` | 撤销 `95ea0be` 中 `{{ @yield(...) }}` 写法（该写法致全站 500） | `layouts/app.blade.php` |
-| `702fe70` | **批量导入艺术家命令** `app:import-artists` + 数据模板 | `app/Console/Commands/ImportArtists.php`、`database/data/artists.json`、`database/data/README-artists.md`、`database/data/avatars/` |
-| `ef498bb` | **og-meta 转义改到数据源头**：在 `@section('og-title'/'og-description')` 用 `e()` 转义，layout 保持 `@yield` 不变 | `resources/views/entrepreneurs/show.blade.php` |
+| `7615311` | 上一轮 Hermes 交接文档入库 | `docs/Hermes交接文档.md` |
+| `2f52f23` | **四期功能上线**：汉堡菜单（前后台全屏弹窗）/ 申请推荐（理由必填+15天冷却）/ 退出账户 / 系统设置（settings 表） | `routes/web.php`、`layouts/app+admin.blade.php`、`Entrepreneur/Setting` 模型、`MyProfileController`、`AdminController`、迁移 `000001/000002`、`tests/*` |
+| `556b1a3` | **社交链接**（social_platform/social_url）+ **iOS 聚焦缩放彻底修复**（viewport maximum-scale + 输入框 16px）+ 个人中心退出入口移除 + bio 4→8 行 | 迁移 `000003`、`Entrepreneur`、`ProfileUpdateRequest`、`show.blade.php`、`layouts/*`、`public/icons/*`(8 图标)、composer.lock、storage gitignore 骨架 |
+| `2819542` | **头像/形象照裁剪改造（方案 B）**：Cropper.js 4:5 主裁自动派生 1:1 头像、二维码 1:1@512、新增 `portrait` 字段；社交平台整合为**单网址输入+域名识别图标**（品牌域名 logo.svg）；个人中心布局优化 | 迁移 `000004`、`cropper.min.js/css`、`logo.svg`、`profile/edit.blade.php`、`show.blade.php`、`Entrepreneur::socialIconForUrl()` |
+| `c677ca2` | 服务器智能体交接清单入库 | `docs/05-服务器智能体交接清单.md` |
+| `3d95939` | README 中英文双语重写 + 官方站点 vour.cn | `README.md` |
+| `63086b7` | 系统设置分享卡片图片改为上传+裁剪（1.91:1 / 1200×630） | `admin/settings.blade.php`、`layouts/admin.blade.php`(@stack)、`SettingsTest` |
 
-**分支状态**：`main` 与远程同步。另有：
-- `backup/city-work` @ `212974a`：存有**被回退的 F1-F4 完整提交链**（见 §4.1）
-- `refactor/blade-v2` @ `e45990c`：旧的方案B 重构分支（历史）
+**分支状态**：`main` 已推送远程同步。本地另有 `database/database.sqlite`（测试库，已 gitignore）。
 
 ---
 
@@ -28,11 +29,14 @@
 
 | 维度 | 现状 |
 |---|---|
-| 城市选择 | profile 页 Alpine 选择器：桌面下拉 + 手机全屏；城市列表港澳台在末尾；定位用 `dingwei.svg` 图标 |
-| 简介展示 | 智库列表/详情/后台均 `{{ }}` 输出；历史实体数据待迁移清理 |
-| 批量导入 | `php artisan app:import-artists` 就绪，按姓名去重可重复执行 |
-| 智库展示条件 | **必须 `status=approved` 且 `is_featured=true`**（列表只显示"已通过+推荐"） |
-| 已知回退 | F1-F4 的邮箱小写 / 密码提示 / Markdown 预览 / 前端测试 **均未恢复**（远程回退状态） |
+| 导航 | 前台+后台统一右上角固定悬浮汉堡 + 全屏弹窗；已删除 LOGO/顶部工具条 |
+| 认证 | 档案认证 pending/approved/rejected；推荐申请独立状态(理由+15天冷却)；个人中心显示「已收录」 |
+| 申请推荐 | 个人中心一键申请（理由弹窗必填）→ 后台「认证/推荐」双标签审核 → 通过后进智库 |
+| 社交链接 | 单个网址输入，**按域名识别黑色图标**（品牌域 logo.svg、平台域各图标、未知域 google.svg）；协议白名单 http(s) |
+| 图片 | 形象照(4:5)+头像(1:1 自动派生)+二维码(1:1@512)+分享卡片图(1.91:1@1200×630) 全部浏览器端裁剪（Cropper.js），服务器只存 |
+| 系统设置 | settings 表（key-value + 缓存）：站点名/描述/分享卡片/footer/ICP；分享图走上传裁剪 |
+| iOS 缩放 | viewport `maximum-scale=1,user-scalable=no` + 输入框 16px，聚焦不再放大 |
+| 测试 | **62 用例 / 146 断言全绿**（本地 PHP 8.2 + sqlite） |
 
 ---
 
@@ -41,56 +45,67 @@
 按顺序执行：
 
 ```bash
-# 1. 数据修复迁移：把 bio 等字段里的 &quot; 实体解码回原字符
-php artisan migrate
+# 1. ⚠️ Composer ≥2.10 需先全局关闭安全公告拦截（Laravel 11 已 EOL）
+composer config --global policy.advisories.block false
 
-# 2. 头像目录软链（已有则跳过）
+# 2. 安装依赖（缺 fileinfo 需忽略平台要求）
+composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-fileinfo
+
+# 3. 迁移（新增 portrait 等，应用全部 000001~000004）
+php artisan migrate --force
+
+# 4. 存储软链（头像/形象照/二维码/分享图目录）
 php artisan storage:link
 
-# 3. 批量导入艺术家（先填好 database/data/artists.json，name 留空的行自动跳过）
-php artisan app:import-artists
+# 5. 刷新缓存
+php artisan config:cache
+php artisan route:cache
 ```
-
-**艺术家数据**：10 个空位模板已就绪（`database/data/artists.json`），字段见 `README-artists.md`。头像图放 `database/data/avatars/`。
 
 ---
 
 ## 4. 重要背景与坑（Hermes 必读）
 
-### 4.1 远程曾 force-push 回退 F1-F4 ⚠️
-`origin/main` 曾被人为 force-push 重写（`4fda375`），**整个 F1-F4 前端功能被回退**（城市列表、定位、Markdown 预览、邮箱小写等全没了，`config/cities.php`、`geolocate.min.js` 等文件被删）。
-本会话已把**城市选择功能**以新提交（`e27dd23`）恢复到当前 base 上。**其余 F1-F4 内容仍在回退状态**，存于 `backup/city-work` 分支。如需恢复需重新评估（当初回退疑似因 CSP 弹窗 bug）。
+### 4.1 服务器硬约束
+1.8G 内存 · 无 Docker · **缺 fileinfo** · **服务器零构建**。
+- 所有前端产物（`public/css/app.css`、`public/js/cropper.min.js`、`public/css/cropper.min.css`、`public/icons/*.svg`）已入库，服务器只 `git pull`，**绝不跑 npm**。
+- 头像上传校验已绕开 finfo（扩展名白名单 + GD 兜底）。
 
-> **严禁直接 force-push main**。多台机器/会话协作时先 `git pull --rebase` 再推。
+### 4.2 Laravel 11 已 EOL ⚠️
+Composer ≥2.10 默认拦截 `laravel/framework ^11.0` 安全公告，`composer install` 会直接报错。部署前必须 `composer config --global policy.advisories.block false`。**中长期应规划升级 Laravel 12。**
 
-### 4.2 `{{ @yield(...) }}` 会导致全站 500 💀
-Blade 的 `@yield` 放在 `{{ }}` 里**不会被编译成 PHP**，页面直接 500（`ecd5986` 就是这么回退的）。og/twitter meta 里的用户内容转义，**必须在 `@section` 源头用 `e()`**（见 `ef498bb`），layout 里保持裸 `@yield`。
+### 4.3 域名匹配用边界判断（勿改回子串）
+`socialIconForUrl()` 用 `$host === $domain || str_ends_with($host, '.'.$domain)`，避免仿冒域名（`61lm.com.cn` 等）误判。**不要把 `str_contains` 改回来。**
 
-### 4.3 服务器硬约束
-1.8G 内存 · 无 Docker · **缺 fileinfo** · **服务器零构建**（构建产物工作站产出后入库）。
-头像上传校验已绕开 finfo（扩展名白名单 + 可选 GD）。
+### 4.4 `{{ @yield(...) }}` 会导致全站 500 💀
+Blade 的 `@yield` 放在 `{{ }}` 里不会被编译，页面直接 500。og/twitter meta 里的用户内容转义必须在 `@section` 源头用 `e()`，layout 保持裸 `@yield`。
 
-### 4.4 数据修复迁移说明
-`2026_08_14_000001_fix_entrepreneur_html_entities.php`：解码 `name/title/industry/city/bio/contact_phone/contact_email` 里的 `&quot; &#34; &lt; &gt; &amp; &#39;`，**反复解码至稳定**（兼容二次编码），仅更新有变化的行。**在本地和产线都要跑**。
+### 4.5 `social_platform` 字段已废弃
+迁移 `000003` 曾建 `social_platform` 列；现已改为按 URL 域名识别图标，该列**保留但不再写入/使用**。勿据此字段渲染图标。
+
+### 4.6 抖音图标为占位
+开源图标库无抖音官方字形，`public/icons/douyin.svg` 用的是 TikTok 风格占位。有官方 SVG 可直接替换同名文件。
+
+### 4.7 MySQL 5.7 兼容
+迁移全部用 `string` 替代 enum；`after()` 在 MySQL 生效（sqlite 为 no-op）。
 
 ---
 
 ## 5. 安全隐患 ⚠️⚠️（最高优先级）
 
-- GitHub PAT（`ghp_S8…` 开头）曾在会话记录中**明文泄露**（两份 `.jsonl` 文件），且进入过模型上下文。
-- **必须尽快到 GitHub Settings → Developer settings → Personal access tokens 吊销/轮换该 token。**
-- 任何情况下：**不要把 token 写进 skill 文件、代码、配置文件**。推送走 `gh auth login`（Windows 凭据管理器）或 git credential manager。
-- 交接后若发现仍有残留明文 token 的会话文件，先擦除再分享。
+- 上轮（08-14）已记录：GitHub PAT（`ghp_S8…` 开头）曾在会话记录中**明文泄露**，要求吊销/轮换。**请确认已处理；如未处理，立即到 GitHub Settings → Developer settings → Personal access tokens 吊销。**
+- 任何情况下：不要把 token 写进 skill 文件、代码、配置文件。推送走 Windows 凭据管理器 / `git credential manager`。
+- 交接后若发现残留明文 token 的会话文件，先擦除再分享。
 
 ---
 
 ## 6. 给 Hermes 的下一步
 
-1. `git pull` 对齐 `main`（`ef498bb`）
-2. 跑 `php artisan migrate`，确认实体修复迁移生效（简介里 `&quot;` 应消失）
-3. 等艺术家名单，填入 `database/data/artists.json`，跑 `app:import-artists`
-4. 评估是否恢复 F1-F4 其余功能（从 `backup/city-work` 提取，注意 CSP/弹窗问题）
-5. 处理 §5 的 token 轮换
+1. `git pull` 对齐 `main`（`63086b7`），核对 `git remote -v` 为 `https://github.com/Abinius/Signify.git`
+2. 按 §3 部署：composer 关公告拦截 → install → migrate → storage:link → config:cache
+3. 确认 §5 token 已轮换
+4. 上线后按 `docs/05-服务器智能体交接清单.md` §5 做浏览器验证（裁剪弹窗、社交图标、推荐申请、系统设置、移动端缩放）
+5. 评估 Laravel 12 升级（§4.2）
 
 ---
 
