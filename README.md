@@ -1,97 +1,113 @@
-# Signify - 企业家形象资产数字化系统
+# Signify · 企业家形象资产数字化系统
+# Signify · Entrepreneur Digital Asset Platform
 
 > **每一份引领行业的商业远见，都值得被更广泛地看见。**
->
-> 不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。
-> Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建
+> **Every leading industry vision deserves to be seen by more people.**
+
+不用复杂定义，只用数字化技术，把企业家的个人价值放大成看得见的核心竞争力。
+No complex definitions — just digital technology that turns an entrepreneur's personal value into visible core competitiveness.
+
+**官方网站 / Official Website: [https://vour.cn](https://vour.cn)**
+
+Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建 / Server-side rendered, zero build
 
 ---
 
-## ⚡ 一键部署（传统服务器 / 宝塔面板）
+## 核心功能 / Features
 
-### 环境要求（传统服务器）
+| 模块 Module | 说明 Description |
+|---|---|
+| **首页** Home | 展示推荐企业家（摄影主导，编辑/杂志风） Featured entrepreneurs, photo-led editorial/magazine style |
+| **企业家库** Directory | 搜索 / 筛选 / 分页，仅显示已认证档案 Search / filter / paginate, approved profiles only |
+| **个人中心** Profile | 形象照裁剪（4:5 自动派生 1:1）、二维码、社交链接、信息编辑，Policy 保护 Portrait crop (4:5 → 1:1), QR, social link, info editing, Policy-protected |
+| **推荐申请** Recommend | 企业家自助申请推荐（必填理由），管理员审核，被拒 15 天冷却 Self-service request (reason required), admin review, 15-day cooldown after rejection |
+| **管理后台** Admin | 认证 / 推荐双标签审核、批量操作、系统设置 Approve/recommend tabs, batch actions, system settings |
+| **品牌分享** Sharing | 名片分享图 og 标签，微信 / 社交可预览 og tags for card sharing, previewable in WeChat/social |
+| **社交链接** Social Link | 单个网址输入，按域名自动识别平台黑色图标（品牌域名用官方 logo）Single URL input, domain-based black icon auto-recognition (brand logo for official domains) |
+| **一键安装** Installer | 数据库连接测试 + 自动建库 DB connection test + auto-create database |
 
-| 项目 | 版本要求 | 说明 |
-|------|----------|------|
-| **PHP** | 8.0+ | 推荐 8.1（性能更好） |
-| **MySQL** | 5.7+ | 需 InnoDB 引擎支持 |
-| **Nginx** | 1.28+ | 或 Apache 2.4+ |
-| **phpMyAdmin** | 5.0+ | 数据库管理（可选） |
+## 技术栈 / Tech Stack
 
-**PHP 扩展（必须）：** `pdo_mysql`, `mbstring`, `openssl`, `curl`, `gd`（`fileinfo` **非必需**——头像上传已做兼容，缺 fileinfo 也能正常跑）
+| 层级 Layer | 技术 Technology |
+|---|---|
+| 后端 Backend | Laravel 11（PHP 8.0+） |
+| 前端 Frontend | Blade + Alpine.js（服务端渲染，零构建 / server-rendered, zero build） |
+| 样式 Style | Tailwind CSS（高端编辑 / 杂志风 editorial/magazine） |
+| 数据库 Database | MySQL 5.7+（string 替代 enum，兼容 / enum-replaced with string） |
+| 认证 Auth | Laravel Breeze |
+| 服务器 Server | Nginx 1.28+ / Apache 2.4+ |
 
-> ⚠️ **重要：** MySQL 5.7 不支持 Laravel 11 默认的 enum 类型，项目已改用 `string` 类型替代，迁移文件完全兼容。
+---
 
-### 部署步骤
+## 环境要求 / Requirements（Traditional Server）
 
-#### 第一步：创建站点和数据库
+| 项目 Item | 版本 Version | 说明 Notes |
+|---|---|---|
+| PHP | 8.0+ | 推荐 8.1+ / 8.2 recommended |
+| MySQL | 5.7+ | 需 InnoDB / InnoDB required |
+| Nginx | 1.28+ | 或 Apache 2.4+ |
+| phpMyAdmin | 5.0+ | 可选 / optional |
 
-1. 登录**宝塔面板** → **网站** → **添加站点**
-2. 配置：
-   - **域名**：填写你的域名或IP
-   - **根目录**：`/www/wwwroot/signify`
-   - **PHP版本**：选择 **8.0** 或 **8.1**
-   - **创建数据库**：✅ 勾选，MySQL 版本选 **5.7**，设置数据库名/用户/密码
+**PHP 扩展 / Extensions（必须 required）：** `pdo_mysql`、`mbstring`、`openssl`、`curl`、`gd`
+（`fileinfo` **非必需 / not required** —— 头像上传已做兼容，缺 fileinfo 也能正常跑 / avatar upload is fileinfo-compatible）
 
-#### 第二步：上传代码
+> ⚠️ MySQL 5.7 不支持 Laravel 默认 enum，项目已改用 `string` 类型，迁移完全兼容。
+> MySQL 5.7 doesn't support Laravel's default enum; the project uses `string` instead, migrations fully compatible.
 
-**方式 A - Git 克隆（推荐）：**
+---
+
+## 一键部署 / One-Click Deployment（宝塔 / BT Panel）
+
+### 1. 创建站点和数据库 / Create site & database
+
+1. 宝塔面板 → **网站** → **添加站点** / BT Panel → Websites → Add site
+2. 配置：**域名**、**根目录** `/www/wwwroot/signify`、**PHP 版本** 8.0/8.1、**创建数据库**（MySQL 5.7）
+
+### 2. 上传代码 / Upload code
+
 ```bash
 cd /www/wwwroot/signify
-rm -rf ./*  # 清空默认文件（如有）
-git clone https://github.com/AbinCheungCom/Signify.git .
+rm -rf ./*
+git clone https://github.com/Abinius/Signify.git .
 ```
 
-**方式 B - 直接上传：**
-下载仓库 ZIP 包，上传至 `/www/wwwroot/signify/` 并解压，确保文件在根目录下。
-
-#### 第三步：配置 .env
+### 3. 配置 .env / Configure .env
 
 ```bash
-cd /www/wwwroot/signify
 cp .env.example .env
 ```
-
-编辑 `.env` 文件（通过宝塔文件管理器或 SSH）：
 ```env
 APP_NAME="Signify"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://你的域名.com
+APP_URL=https://your-domain.com
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=你创建的数据库名
-DB_USERNAME=你创建的用户名
-DB_PASSWORD=你的数据库密码
+DB_DATABASE=your_db
+DB_USERNAME=your_user
+DB_PASSWORD=your_password
 
 FILESYSTEM_DISK=public
 SESSION_DRIVER=file
 ```
 
-#### 第四步：安装依赖（SSH 终端）
+### 4. 安装依赖 / Install dependencies（SSH）
 
 ```bash
 cd /www/wwwroot/signify
-
-# 安装 Composer 依赖
 composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-fileinfo
-
-# 生成应用密钥
 php artisan key:generate
-
-# 创建存储链接
 php artisan storage:link
-
-# 运行数据库迁移（兼容 MySQL 5.7）
 php artisan migrate --force
-
-# 刷新配置缓存（改 .env 后必须执行）
 php artisan config:cache
 ```
 
-#### 第五步：设置目录权限
+> ⚠️ **Composer ≥2.10 用户**：Laravel 11 已 EOL，`composer install` 可能被安全公告策略拦截。
+> 如报 "affected by security advisories"，执行 `composer config --global policy.advisories.block false` 后重试。
+
+### 5. 目录权限 / Permissions
 
 ```bash
 chown -R www:www /www/wwwroot/signify
@@ -99,126 +115,41 @@ chmod -R 755 /www/wwwroot/signify/storage
 chmod -R 755 /www/wwwroot/signify/bootstrap/cache
 ```
 
-#### 第六步：配置网站（Nginx）
+### 6. Nginx 配置 / Nginx config
 
-1. 宝塔面板 → **网站** → 找到你的站点 → **设置** → **配置文件**
-2. 删除默认配置，替换为：
+根目录 `/www/wwwroot/signify/public`，参考仓库 `deploy/nginx.conf`（含安全响应头、`.env` 禁止访问、静态缓存、Gzip）。
 
-```nginx
-server {
-    listen 80;
-    server_name 你的域名或IP;
-    root /www/wwwroot/signify/public;
-    index index.php;
+### 7. SSL 证书 / SSL（强烈推荐 recommended）
 
-    charset utf-8;
+宝塔 → SSL → **Let's Encrypt** → 强制 HTTPS。
 
-    # 安全响应头
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
+### 8. 创建管理员 / Create admin
 
-    # 请求日志
-    access_log /www/wwwroot/signify/storage/logs/access.log;
-    error_log /www/wwwroot/signify/storage/logs/error.log;
+**方式 A**：访问 `https://your-domain.com/setup` 一键安装。
+**方式 B**：`php artisan tinker`，创建 `is_admin => true` 的用户。
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+### 验证 / Verify
 
-    location = /favicon.ico {
-        access_log off;
-        log_not_found off;
-    }
-
-    # PHP-FPM（传统服务器配置）
-    # 常见路径：/tmp/php-cgi.sock 或 127.0.0.1:9000
-    # 请根据服务器实际情况选择正确的连接方式
-    location ~ \.php$ {
-        fastcgi_pass unix:/tmp/php-cgi.sock;
-        # 如使用 TCP 连接，取消下面两行注释:
-        # fastcgi_pass 127.0.0.1:9000;
-        # fastcgi_keep_conn on;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_read_timeout 300;
-    }
-
-    # 静态资源缓存
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 30d;
-        add_header Cache-Control "public";
-    }
-
-    # 禁止访问敏感文件
-    location ~ /\.env {
-        deny all;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-
-    # Gzip 压缩（低配服务器建议开启）
-    gzip on;
-    gzip_vary on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-}
-```
-
-3. 保存并重启 Nginx：宝塔面板 → **软件商店** → **Nginx** → **重启**
-
-#### 第七步：SSL 证书（强烈推荐）
-
-1. 宝塔面板 → **网站** → 你的站点 → **SSL**
-2. 选择 **Let's Encrypt** → 申请免费证书
-3. 开启 HTTPS 并强制跳转
-
-#### 第八步：创建管理员账号
-
-**方式 A - 一键安装页面：**
-访问 `https://你的域名/setup`，按提示完成安装。
-
-**方式 B - 命令行：**
-```bash
-cd /www/wwwroot/signify
-php artisan tinker
-```
-```php
->>> \App\Models\User::create([
->>>     'name'=>'Admin',
->>>     'email'=>'admin@signify.com',
->>>     'password'=>\Illuminate\Support\Facades\Hash::make('你的密码'),
->>>     'is_admin'=>true,
->>>     'email_verified_at'=>now()
->>> ]);
->>> exit
-```
-
-#### 验证部署
-
-- `https://你的域名` → 首页
-- `https://你的域名/setup` → 提示已安装（或显示安装页）
-- `https://你的域名/login` → 登录页
-- 登录后访问 `/admin/dashboard` → 管理后台
+- `https://your-domain.com/login` → 登录页 Login page
+- 登录后 `/admin/dashboard` → 管理后台 Admin dashboard
 
 ---
 
-## 🔐 数据安全设计
+## 🔐 数据安全设计 / Data Security
 
-| 安全措施 | 实现方式 |
-|----------|----------|
-| **数据隔离** | `user_id` UNIQUE 约束 + `EntrepreneurPolicy` 验证 |
-| **防注入** | LIKE 查询 `addcslashes()` 转义特殊字符 |
-| **防越权** | 路由模型绑定替换为显式 `approved()` 查询 |
-| **头像安全** | 扩展名白名单 + GD 校验 + 安全文件名（兼容无 fileinfo 服务器） |
-| **管理员授权** | 中间件 + Policy 双重保护 |
-| **敏感文件** | Nginx 禁止访问 `.env` |
-| **生产模式** | `APP_DEBUG=false` + `APP_ENV=production` |
+| 安全措施 Security | 实现方式 Implementation |
+|---|---|
+| 数据隔离 Data isolation | `user_id` UNIQUE + `EntrepreneurPolicy` 验证 |
+| 防注入 SQL injection | LIKE 查询 `addcslashes()` 转义 |
+| 防越权 Authorization | 路由模型绑定显式 `approved()` 查询 |
+| 头像安全 Upload safety | 扩展名白名单 + GD 校验 + 安全文件名 |
+| 管理员授权 Admin auth | 中间件 + Policy 双重保护 |
+| 敏感文件 Sensitive files | Nginx 禁止访问 `.env` |
+| 生产模式 Production | `APP_DEBUG=false` |
 
 ---
 
-## 📋 一键重装（保留数据库）
+## 📋 一键重装 / Reinstall（保留数据库 keep DB）
 
 ```bash
 cd /www/wwwroot/signify
@@ -231,7 +162,7 @@ chown -R www:www /www/wwwroot/signify
 
 ---
 
-## 🐳 Docker 部署（可选）
+## 🐳 Docker 部署 / Docker（可选 optional）
 
 ```bash
 cd Signify
@@ -241,62 +172,36 @@ docker-compose up -d
 
 ---
 
-## 技术栈
-
-| 层级 | 技术 |
-|------|------|
-| 后端框架 | Laravel 11（PHP 8.0+） |
-| 前端框架 | Blade + Alpine.js（服务端渲染，零构建） |
-| 样式 | Tailwind CSS（高端编辑/杂志风） |
-| 数据库 | MySQL 5.7+（兼容 enum 替代方案） |
-| 认证 | Laravel 认证（Breeze 派生） |
-| 服务器 | Nginx 1.28+ / Apache 2.4+ |
-
----
-
-## 核心功能
-
-| 模块 | 说明 |
-|------|------|
-| **首页** | 展示推荐企业家（摄影主导，编辑/杂志风） |
-| **企业家库** | 搜索/筛选/分页，仅显示已认证档案 |
-| **个人中心** | 头像上传/信息编辑，Policy 保护 |
-| **管理后台** | 审批/拒绝/推荐/批量操作 |
-| **一键安装** | 数据库连接测试 + 自动建库 |
-| **品牌分享** | 名片分享图用企业家头像（og 标签），微信/社交可预览 |
-| **数据隔离** | 用户仅可修改自己的档案 |
-
----
-
-## 项目结构
+## 项目结构 / Project Structure
 
 ```
 Signify/
 ├── app/
-│   ├── Http/Controllers/     # 控制器（Auth/Admin/Entrepreneur/Setup）
-│   ├── Models/               # 数据模型
-│   ├── Policies/            # 权限策略
-│   └── Middleware/           # 中间件
-├── config/                   # Laravel 配置
+│   ├── Http/Controllers/     # 控制器 Controllers
+│   ├── Models/               # 数据模型 Models
+│   ├── Policies/             # 权限策略 Policies
+│   └── Middleware/           # 中间件 Middleware
+├── config/                   # Laravel 配置 Config
 ├── database/
-│   ├── migrations/           # 数据库迁移（兼容 MySQL 5.7）
-│   ├── factories/            # 测试工厂
-│   └── seeders/              # 管理员种子
+│   ├── migrations/           # 数据库迁移 Migrations（兼容 MySQL 5.7）
+│   ├── factories/            # 测试工厂 Factories
+│   └── seeders/              # 种子 Seeders
 ├── deploy/
-│   ├── nginx.conf            # Nginx 配置模板（传统服务器）
-│   └── 宝塔面板部署教程.md    # 详细部署文档
-├── resources/views/          # Blade 视图（layouts / 页面 / components）
-├── routes/
-│   ├── web.php               # 主路由
-│   ├── auth.php              # 认证路由
-│   └── setup.php             # 安装路由
-├── tests/Feature/           # 功能测试（22 用例）
-├── docs/                    # 项目文档（重构方案 / UI 规范 / 页面清单）
-└── .env.example              # 环境变量模板
+│   ├── nginx.conf            # Nginx 配置模板
+│   └── 宝塔面板部署教程.md     # BT panel guide
+├── resources/views/          # Blade 视图 Views
+├── public/
+│   ├── js/cropper.min.js     # 图片裁剪 Image crop
+│   ├── css/cropper.min.css
+│   └── icons/                # 社交平台黑色图标 Social icons
+├── routes/                   # 路由 Routes
+├── tests/Feature/            # 功能测试 Feature tests
+├── docs/                     # 项目文档 Docs
+└── .env.example              # 环境变量模板 Env template
 ```
 
 ---
 
 ## License
 
-MIT · [GitHub](https://github.com/AbinCheungCom/Signify)
+MIT · [GitHub](https://github.com/Abinius/Signify) · [官方站点 / Official: vour.cn](https://vour.cn)
