@@ -10,6 +10,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
   <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @stack('styles')
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
   <script>
@@ -96,6 +97,8 @@
     @include('components.flash')
     @yield('content')
   </main>
+
+  @stack('scripts')
 
 </body>
 </html>

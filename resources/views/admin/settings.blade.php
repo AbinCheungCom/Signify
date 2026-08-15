@@ -1,5 +1,12 @@
 @extends('layouts.admin')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/cropper.min.css') }}">
+@endpush
+@push('scripts')
+  <script src="{{ asset('js/cropper.min.js') }}"></script>
+@endpush
+
 @section('title', '系统设置')
 
 @section('content')
@@ -8,7 +15,7 @@
   <h1 class="font-display text-display-lg font-black text-ink mb-10">系统设置</h1>
 
   <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data"
-        class="space-y-8">
+        class="space-y-8" x-data="settingsCrop()">
     @csrf
 
     {{-- 基础信息 --}}
@@ -46,20 +53,39 @@
       <div>
         <label class="label-caption text-muted">分享卡片图片</label>
         <div class="mt-3 flex items-center gap-6">
-          @if($values['share_image'])
-            <img src="{{ $values['share_image'] }}" alt="分享卡片图片"
-                 class="w-24 h-24 object-cover border border-hairline">
-          @endif
-          <div class="flex-1">
-            <input type="url" name="share_image" value="{{ old('share_image', $values['share_image']) }}"
-                   placeholder="https://… 或留空使用下方上传" class="input-line">
-            <p class="text-xs text-muted mt-2">图片地址（绝对 URL）；或直接上传图片文件（将覆盖上面的地址）。</p>
-            <input type="file" name="share_image_file" accept="image/jpeg,image/png,image/gif,image/webp"
-                   class="text-sm text-ink-soft mt-3">
+          <button type="button" @click="$refs.shareImageInput.click()"
+                  class="w-24 h-24 border border-hairline overflow-hidden relative grid place-items-center
+                         {{ $values['share_image'] ? '' : 'bg-ink/5' }} hover:opacity-80 transition-opacity"
+                  aria-label="上传分享卡片图片">
+            <img :src="sharePreview || '{{ $values['share_image'] ?? '' }}'"
+                 x-show="sharePreview || {{ $values['share_image'] ? 'true' : 'false' }}"
+                 class="w-full h-full object-contain" alt="分享卡片图片">
+            <span x-show="!(sharePreview || {{ $values['share_image'] ? 'true' : 'false' }})"
+                  class="label-caption text-muted">点击上传</span>
+            <span x-show="sharePreview || {{ $values['share_image'] ? 'true' : 'false' }}"
+                  class="absolute bottom-0 inset-x-0 bg-ink/60 text-paper text-[10px] text-center py-0.5">点击上传</span>
+          </button>
+          <p class="text-xs text-muted">点击上传，按 1.91:1 裁剪为分享卡片图片（微信/社交 og:image 推荐比例）</p>
+        </div>
+        <input type="file" name="share_image_file" x-ref="shareImageInput" class="hidden"
+               accept="image/jpeg,image/png,image/gif,image/webp" @change="openShareCrop($event.target)">
+        @error('share_image_file') <p class="field-error">{{ $message }}</p> @enderror
+      </div>
+
+      {{-- 分享卡片图片裁剪弹窗 --}}
+      <div x-show="cropOpen" x-cloak @keydown.escape.window="cropOpen = false"
+           class="fixed inset-0 z-[300] bg-ink/60 backdrop-blur-sm grid place-items-center p-4"
+           @click.self="cropOpen = false">
+        <div class="bg-surface border border-hairline p-5 w-full max-w-2xl shadow-float flex flex-col max-h-[92vh]">
+          <p class="label-caption text-muted mb-4">裁剪分享卡片图片（1.91:1）</p>
+          <div class="flex-1 overflow-hidden min-h-0">
+            <img x-ref="shareCropImg" class="max-w-full max-h-full w-auto mx-auto" alt="待裁剪图片">
+          </div>
+          <div class="mt-5 flex items-center justify-end gap-3 flex-shrink-0">
+            <button type="button" @click="cropOpen = false" class="label-caption text-muted hover:text-ink">取消</button>
+            <button type="button" @click="confirmShareCrop()" class="btn-ink !py-2 !px-5">确认裁剪</button>
           </div>
         </div>
-        @error('share_image') <p class="field-error">{{ $message }}</p> @enderror
-        @error('share_image_file') <p class="field-error">{{ $message }}</p> @enderror
       </div>
     </div>
 
@@ -83,4 +109,58 @@
     <button type="submit" class="btn-ink">保存设置</button>
   </form>
 </div>
+<script>
+  window.settingsCrop = function () {
+    return {
+      cropOpen: false,
+      cropSrc: null,
+      cropper: null,
+      sharePreview: null,
+
+      // 选择图片 → 打开裁剪弹窗（1.91:1 分享卡片比例）
+      openShareCrop(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        const self = this;
+        reader.onload = function (e) {
+          input.value = ''; // 取消裁剪时不影响原图
+          self.cropSrc = e.target.result;
+          self.cropOpen = true;
+          self.$nextTick(function () { self.initCropper(); });
+        };
+        reader.readAsDataURL(file);
+      },
+
+      initCropper() {
+        const img = this.$refs.shareCropImg;
+        if (!img) return;
+        if (this.cropper) this.cropper.destroy();
+        img.onload = () => {
+          this.cropper = new Cropper(img, {
+            aspectRatio: 1200 / 630,
+            viewMode: 1,
+            autoCropArea: 1,
+          });
+        };
+        img.src = this.cropSrc;
+      },
+
+      // 确认裁剪 → 输出 1200×630，写入隐藏 file input，随表单原子提交
+      confirmShareCrop() {
+        if (!this.cropper) return;
+        const canvas = this.cropper.getCroppedCanvas({ width: 1200, height: 630 });
+        const self = this;
+        canvas.toBlob(function (blob) {
+          const file = new File([blob], 'share.jpg', { type: 'image/jpeg' });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          self.$refs.shareImageInput.files = dt.files;
+          self.sharePreview = canvas.toDataURL('image/jpeg');
+        }, 'image/jpeg', 0.9);
+        this.cropOpen = false;
+      }
+    };
+  };
+</script>
 @endsection

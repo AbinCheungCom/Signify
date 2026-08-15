@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class SettingsTest extends TestCase
@@ -53,6 +54,26 @@ class SettingsTest extends TestCase
         $this->assertEquals('新的分享标题', Setting::get('share_title'));
         $this->assertEquals('https://example.com/share.png', Setting::get('share_image'));
         $this->assertEquals('京ICP备12345678号', Setting::get('icp_number'));
+    }
+
+    /**
+     * 管理员可上传分享卡片图片文件
+     */
+    public function test_admin_can_upload_share_image(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin);
+
+        $response = $this->post('/admin/settings', [
+            'site_name'        => '新站点',
+            'share_image_file' => UploadedFile::fake()->image('share.jpg'),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertNotNull(Setting::get('share_image'));
+        $this->assertStringContainsString('/storage/settings/', Setting::get('share_image'));
     }
 
     /**
