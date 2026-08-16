@@ -17,28 +17,16 @@
   @if(!$entrepreneur)
     <div class="border border-hairline bg-surface p-10">
       <h2 class="font-display text-display-md font-bold text-ink mb-2">创建企业家档案</h2>
-      <p class="text-sm text-muted mb-8">创建后自动通过，获「推荐」后进入智库；创建档案前需完成邮箱验证。</p>
-      @if(auth()->user()->hasVerifiedEmail())
-        <form method="POST" action="{{ route('profile.create') }}" class="max-w-md space-y-6">
-          @csrf
-          <div>
-            <label class="label-caption text-muted">姓名</label>
-            <input type="text" name="name" value="{{ old('name') }}" required autofocus class="input-line">
-            @error('name') <p class="field-error">{{ $message }}</p> @enderror
-          </div>
-          <button type="submit" class="btn-ink">创建档案</button>
-        </form>
-      @else
-        <div class="max-w-md">
-          <p class="text-sm text-ink-soft mb-6">
-            验证邮件已发送至 <strong>{{ auth()->user()->email }}</strong>，请查收并点击邮件中的链接完成验证后再创建档案。
-          </p>
-          <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-            <button type="submit" class="btn-outline">重新发送验证邮件</button>
-          </form>
+      <p class="text-sm text-muted mb-8">创建后自动通过，获「推荐」后进入智库。</p>
+      <form method="POST" action="{{ route('profile.create') }}" class="max-w-md space-y-6">
+        @csrf
+        <div>
+          <label class="label-caption text-muted">姓名</label>
+          <input type="text" name="name" value="{{ old('name') }}" required autofocus class="input-line">
+          @error('name') <p class="field-error">{{ $message }}</p> @enderror
         </div>
-      @endif
+        <button type="submit" class="btn-ink">创建档案</button>
+      </form>
     </div>
   @else
     <p class="mb-4 text-sm text-ink-soft">

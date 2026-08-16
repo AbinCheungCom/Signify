@@ -90,11 +90,6 @@ class MyProfileController extends Controller
      */
     public function create(ProfileCreateRequest $request)
     {
-        // 双保险：路由层已加 verified 中间件，此处再兜底一次
-        if (! Auth::user()->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice')->with('error', '请先验证邮箱后再创建档案');
-        }
-
         if (Auth::user()->entrepreneur) {
             return redirect()->route('profile.show');
         }

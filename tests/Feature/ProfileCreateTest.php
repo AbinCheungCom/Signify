@@ -11,17 +11,20 @@ class ProfileCreateTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 未验证邮箱的用户不能创建档案（防开放注册下的垃圾档案）
+     * 未验证邮箱的用户也可以创建档案（已移除邮箱验证门槛）
      */
-    public function test_unverified_user_cannot_create_profile(): void
+    public function test_unverified_user_can_create_profile(): void
     {
         $user = User::factory()->unverified()->create();
 
         $this->actingAs($user)
             ->post('/my/profile', ['name' => '张三'])
-            ->assertRedirect(route('verification.notice'));
+            ->assertRedirect(route('profile.show'));
 
-        $this->assertDatabaseMissing('entrepreneurs', ['user_id' => $user->id]);
+        $this->assertDatabaseHas('entrepreneurs', [
+            'user_id' => $user->id,
+            'name' => '张三',
+        ]);
     }
 
     /**

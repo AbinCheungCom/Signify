@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,17 +43,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // 触发验证邮件（User 已实现 MustVerifyEmail）。
-        // SMTP 未配置/发送失败不阻断注册，用户可在「验证邮箱」页手动重发。
-        try {
-            event(new Registered($user));
-        } catch (\Throwable $e) {
-            \Log::warning('注册验证邮件发送失败：'.$e->getMessage());
-        }
-
-        // 未验证邮箱时引导到验证页（创建企业家档案需先验证邮箱）
-        return redirect()->intended(
-            $user->hasVerifiedEmail() ? route('home') : route('verification.notice')
-        );
+        return redirect()->intended(route('home'));
     }
 }
