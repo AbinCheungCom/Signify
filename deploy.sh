@@ -3,7 +3,7 @@
 # =============================================================================
 # Signify 一键部署脚本
 # 适用于：宝塔面板 / 传统 Linux 服务器
-# 环境要求：PHP 8.0+ / MySQL 5.7+ / Nginx 1.28+
+# 环境要求：PHP 8.2+ / MySQL 5.7+ / Nginx 1.28+
 # =============================================================================
 
 set -e
@@ -43,10 +43,10 @@ check_command() {
 # 检查 PHP 版本
 check_php_version() {
     PHP_VERSION=$(php -v | grep -oP '\d+\.\d+' | head -1)
-    REQUIRED_VERSION="8.0"
+    REQUIRED_VERSION="8.2"
 
     if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PHP_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
-        print_error "PHP 版本必须 >= 8.0，当前版本: $PHP_VERSION"
+        print_error "PHP 版本必须 >= 8.2（Laravel 11 最低要求），当前版本: $PHP_VERSION"
         exit 1
     fi
     print_success "PHP 版本检查通过: $PHP_VERSION"
@@ -55,7 +55,7 @@ check_php_version() {
 # 检查 PHP 扩展
 check_php_extensions() {
     print_info "检查 PHP 扩展..."
-    REQUIRED_EXTENSIONS=("pdo_mysql" "mbstring" "openssl" "fileinfo" "curl" "gd" "tokenizer" "xml" "ctype" "json" "bcmath")
+    REQUIRED_EXTENSIONS=("pdo_mysql" "mbstring" "openssl" "curl" "gd" "tokenizer" "xml" "ctype" "json" "bcmath")
 
     for ext in "${REQUIRED_EXTENSIONS[@]}"; do
         if ! php -m | grep -q "^$ext$"; then
