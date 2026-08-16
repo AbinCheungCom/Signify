@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-6 py-12">
-  <p class="label-caption text-accent mb-4">DASHBOARD</p>
-  <h1 class="font-display text-display-lg font-black text-ink mb-10">待审核申请</h1>
+  <p class="label-caption text-accent mb-4 text-center">DASHBOARD</p>
+  <h1 class="font-display text-display-lg font-black text-ink mb-10 text-center">待审核申请</h1>
 
   <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12">
     @foreach([

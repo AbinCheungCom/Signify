@@ -6,8 +6,8 @@
 <div class="max-w-7xl mx-auto px-6 py-12"
      x-data="{ ids: [], get allIds() { return @js($entrepreneurs->pluck('id')->all()) } }">
 
-  <p class="label-caption text-accent mb-4">ADMIN · ENTREPRENEURS</p>
-  <h1 class="font-display text-display-lg font-black text-ink mb-10">全部企业家</h1>
+  <p class="label-caption text-accent mb-4 text-center">ADMIN · ENTREPRENEURS</p>
+  <h1 class="font-display text-display-lg font-black text-ink mb-10 text-center">全部企业家</h1>
 
   <form method="GET" action="{{ route('admin.entrepreneurs') }}"
         class="border-b border-hairline pb-6 mb-8 flex flex-col md:flex-row gap-5 md:items-end">

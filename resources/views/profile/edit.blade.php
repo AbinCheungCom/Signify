@@ -11,8 +11,8 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-6 py-16" x-data="profileUpload({{ $errors->has('reason') ? 'true' : 'false' }}, @js(old('social_links', $entrepreneur->social_links ?? [])))">
-  <p class="label-caption text-accent mb-4">MY PROFILE</p>
-  <h1 class="font-display text-display-lg font-black text-ink mb-10">个人中心</h1>
+  <p class="label-caption text-accent mb-4 text-center">MY PROFILE</p>
+  <h1 class="font-display text-display-lg font-black text-ink mb-10 text-center">个人中心</h1>
 
   @if(!$entrepreneur)
     <div class="border border-hairline bg-surface p-10">
@@ -267,7 +267,9 @@
         @error('wechat_qrcode') <p class="field-error">{{ $message }}</p> @enderror
       </div>
 
-      <button type="submit" class="btn-ink">保存修改</button>
+      <div class="text-center">
+        <button type="submit" class="btn-ink">保存修改</button>
+      </div>
     </form>
   @endif
 </div>

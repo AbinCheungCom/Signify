@@ -36,9 +36,9 @@
           <p class="label-caption text-muted">{{ number_format($entrepreneur->view_count) }} 人浏览过</p>
         @endif
       </div>
-      <h1 class="mt-4 font-display text-display-lg font-black text-ink">{{ $entrepreneur->name }}</h1>
+      <h1 class="mt-4 font-display text-display-lg font-black text-ink text-center">{{ $entrepreneur->name }}</h1>
       @if($entrepreneur->title)
-        <p class="mt-2 text-lg text-ink-soft">{{ $entrepreneur->title }}</p>
+        <p class="mt-2 text-lg text-ink-soft text-center">{{ $entrepreneur->title }}</p>
       @endif
 
       @if($entrepreneur->bio)

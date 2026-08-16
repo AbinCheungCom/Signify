@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="max-w-md mx-auto px-6 py-20">
-  <p class="label-caption text-accent mb-4">SIGN IN</p>
-  <h1 class="font-display text-display-lg font-black text-ink mb-10">登录</h1>
+  <p class="label-caption text-accent mb-4 text-center">SIGN IN</p>
+  <h1 class="font-display text-display-lg font-black text-ink mb-10 text-center">登录</h1>
 
   @if(session('status'))
     <div class="mb-8 border border-hairline border-l-4 border-l-status-success bg-surface px-5 py-4">
