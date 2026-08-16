@@ -4,7 +4,7 @@
 
 {{-- 分享卡片：图片用该企业家上传的头像；无头像时不覆盖 og-image，回退到系统设置的全局分享图 --}}
 {{-- 转义说明：@section('name', $val) 内部已自动 e()，无需再显式转义（重复 e() 会造成 &amp;amp; 双重实体） --}}
-@section('og-title', $entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY'))
+@section('og-title', trim($entrepreneur->name.($entrepreneur->title ? ' '.$entrepreneur->title : '')))
 @section('og-description', \Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: \App\Models\Setting::get('site_description', '每一份引领行业的商业远见，都值得被更广泛地看见')), 80))
 @section('og-url', route('entrepreneurs.show', $entrepreneur->id))
 @if($entrepreneur->portrait || $entrepreneur->avatar)
@@ -27,18 +27,19 @@
     </div>
 
     <div class="md:col-span-3">
-      @if($entrepreneur->is_featured)
-        <span class="bg-ink text-paper text-[11px] uppercase tracking-widest px-2.5 py-1">推荐</span>
-      @endif
-      <div class="flex items-center justify-between mt-4">
-        <p class="label-caption text-accent">{{ $entrepreneur->industry ?? '—' }} · {{ $entrepreneur->city ?? '—' }}</p>
-        @if(($entrepreneur->view_count ?? 0) > 10)
-          <p class="label-caption text-muted">{{ number_format($entrepreneur->view_count) }} 人浏览过</p>
+      <div class="mt-4 flex items-center justify-center gap-3">
+        <h1 class="font-display text-display-lg font-black text-ink">{{ $entrepreneur->name }}</h1>
+        @if($entrepreneur->is_featured)
+          <img src="{{ asset('icons/recommend.svg') }}" alt="推荐"
+               class="w-6 h-6 object-contain flex-shrink-0">
         @endif
       </div>
-      <h1 class="mt-4 font-display text-display-lg font-black text-ink text-center">{{ $entrepreneur->name }}</h1>
       @if($entrepreneur->title)
         <p class="mt-2 text-lg text-ink-soft text-center">{{ $entrepreneur->title }}</p>
+      @endif
+      <p class="mt-3 label-caption text-accent text-center">{{ $entrepreneur->industry ?? '—' }} · {{ $entrepreneur->city ?? '—' }}</p>
+      @if(($entrepreneur->view_count ?? 0) > 10)
+        <p class="mt-2 label-caption text-muted text-center">{{ number_format($entrepreneur->view_count) }} 人浏览过</p>
       @endif
 
       @if($entrepreneur->bio)
