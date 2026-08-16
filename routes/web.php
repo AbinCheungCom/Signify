@@ -23,7 +23,7 @@ Route::middleware(['auth'])->group(function () {
     // 个人中心
     Route::get('/my/profile', [MyProfileController::class, 'show'])->name('profile.show');
     Route::patch('/my/profile', [MyProfileController::class, 'update'])->name('profile.update');
-    Route::post('/my/profile', [MyProfileController::class, 'create'])->name('profile.create');
+    Route::post('/my/profile', [MyProfileController::class, 'create'])->name('profile.create')->middleware('verified');
 
     // 推荐申请
     Route::post('/my/profile/featured-request', [MyProfileController::class, 'requestFeatured'])->name('profile.featured-request');

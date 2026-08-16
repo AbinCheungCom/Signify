@@ -17,16 +17,28 @@
   @if(!$entrepreneur)
     <div class="border border-hairline bg-surface p-10">
       <h2 class="font-display text-display-md font-bold text-ink mb-2">创建企业家档案</h2>
-      <p class="text-sm text-muted mb-8">创建后自动通过，获「推荐」后进入智库。</p>
-      <form method="POST" action="{{ route('profile.create') }}" class="max-w-md space-y-6">
-        @csrf
-        <div>
-          <label class="label-caption text-muted">姓名</label>
-          <input type="text" name="name" value="{{ old('name') }}" required autofocus class="input-line">
-          @error('name') <p class="field-error">{{ $message }}</p> @enderror
+      <p class="text-sm text-muted mb-8">创建后自动通过，获「推荐」后进入智库；创建档案前需完成邮箱验证。</p>
+      @if(auth()->user()->hasVerifiedEmail())
+        <form method="POST" action="{{ route('profile.create') }}" class="max-w-md space-y-6">
+          @csrf
+          <div>
+            <label class="label-caption text-muted">姓名</label>
+            <input type="text" name="name" value="{{ old('name') }}" required autofocus class="input-line">
+            @error('name') <p class="field-error">{{ $message }}</p> @enderror
+          </div>
+          <button type="submit" class="btn-ink">创建档案</button>
+        </form>
+      @else
+        <div class="max-w-md">
+          <p class="text-sm text-ink-soft mb-6">
+            验证邮件已发送至 <strong>{{ auth()->user()->email }}</strong>，请查收并点击邮件中的链接完成验证后再创建档案。
+          </p>
+          <form method="POST" action="{{ route('verification.send') }}">
+            @csrf
+            <button type="submit" class="btn-outline">重新发送验证邮件</button>
+          </form>
         </div>
-        <button type="submit" class="btn-ink">创建档案</button>
-      </form>
+      @endif
     </div>
   @else
     <p class="mb-4 text-sm text-ink-soft">
@@ -272,6 +284,10 @@
   @endif
 </div>
 <script>
+  // 社交图标映射：与 PHP 端共用 config/social-icons.php（单一来源，避免两端漂移）
+  window.SOCIAL_ICONS = @json(config('social-icons.map', []));
+  window.SOCIAL_ICONS_DEFAULT = @json(config('social-icons.default', 'google.svg'));
+
   window.profileUpload = function (applyModal, socialLinks) {
     return {
       applyModal: !!applyModal,
@@ -304,27 +320,8 @@
         } catch (e) {
           host = (url || '').toLowerCase();
         }
-        const map = {
-          'abincheung.com': 'logo.svg',
-          'foxfun.cn': 'logo.svg',
-          '61ml.com': 'logo.svg',
-          'voue.cn': 'logo.svg',
-          'vour.cn': 'logo.svg',
-          'ihote.com': 'logo.svg',
-          '61lm.com': 'logo.svg',
-          'xiaohongshu.com': 'xiaohongshu.svg',
-          'weibo.com': 'weibo.svg',
-          'weibo.cn': 'weibo.svg',
-          'douyin.com': 'douyin.svg',
-          'facebook.com': 'facebook.svg',
-          'fb.com': 'facebook.svg',
-          'instagram.com': 'instagram.svg',
-          'telegram.me': 'telegram.svg',
-          't.me': 'telegram.svg',
-          'whatsapp.com': 'whatsapp.svg',
-          'wa.me': 'whatsapp.svg',
-        };
-        let icon = 'google.svg';
+        const map = window.SOCIAL_ICONS || {};
+        let icon = window.SOCIAL_ICONS_DEFAULT || 'google.svg';
         Object.keys(map).some(function (k) {
           // 边界匹配：主域或子域名，避免仿冒域名误判
           if (host === k || host.endsWith('.' + k)) { icon = map[k]; return true; }

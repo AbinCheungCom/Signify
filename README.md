@@ -17,9 +17,9 @@ Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建 / Server-
 
 | 模块 Module | 说明 Description |
 |---|---|
-| **首页** Home | 展示推荐企业家（摄影主导，编辑/杂志风） Featured entrepreneurs, photo-led editorial/magazine style |
-| **企业家库** Directory | 搜索 / 筛选 / 分页，仅显示已认证档案 Search / filter / paginate, approved profiles only |
-| **个人中心** Profile | 形象照裁剪（4:5 自动派生 1:1）、二维码、社交链接、信息编辑，Policy 保护 Portrait crop (4:5 → 1:1), QR, social link, info editing, Policy-protected |
+| **首页** Home | 登录墙：登录后直达个人名片，无档案引导创建 Login wall: redirects to own card or onboarding |
+| **企业家库** Directory | 搜索 / 筛选 / 分页，仅收录已获「推荐」的认证档案 Search / filter / paginate, featured profiles only |
+| **个人中心** Profile | 形象照裁剪（4:5 自动派生 1:1）、二维码、社交链接、信息编辑，Policy 保护；创建档案需先验证邮箱 Portrait crop (4:5 → 1:1), QR, social link, info editing, Policy-protected; email verification required to create |
 | **推荐申请** Recommend | 企业家自助申请推荐（必填理由），管理员审核，被拒 15 天冷却 Self-service request (reason required), admin review, 15-day cooldown after rejection |
 | **管理后台** Admin | 认证 / 推荐双标签审核、批量操作、系统设置 Approve/recommend tabs, batch actions, system settings |
 | **品牌分享** Sharing | 名片分享图 og 标签，微信 / 社交可预览 og tags for card sharing, previewable in WeChat/social |
@@ -30,7 +30,7 @@ Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建 / Server-
 
 | 层级 Layer | 技术 Technology |
 |---|---|
-| 后端 Backend | Laravel 11（PHP 8.0+） |
+| 后端 Backend | Laravel 11（PHP 8.2+） |
 | 前端 Frontend | Blade + Alpine.js（服务端渲染，零构建 / server-rendered, zero build） |
 | 样式 Style | Tailwind CSS（高端编辑 / 杂志风 editorial/magazine） |
 | 数据库 Database | MySQL 5.7+（string 替代 enum，兼容 / enum-replaced with string） |
@@ -43,7 +43,7 @@ Laravel 11 + Blade + Alpine.js · 服务端渲染，服务器零构建 / Server-
 
 | 项目 Item | 版本 Version | 说明 Notes |
 |---|---|---|
-| PHP | 8.0+ | 推荐 8.1+ / 8.2 recommended |
+| PHP | 8.2+ | Laravel 11 最低要求 / Laravel 11 minimum |
 | MySQL | 5.7+ | 需 InnoDB / InnoDB required |
 | Nginx | 1.28+ | 或 Apache 2.4+ |
 | phpMyAdmin | 5.0+ | 可选 / optional |
@@ -144,6 +144,7 @@ chmod -R 755 /www/wwwroot/signify/bootstrap/cache
 | 防越权 Authorization | 路由模型绑定显式 `approved()` 查询 |
 | 头像安全 Upload safety | 扩展名白名单 + GD 校验 + 安全文件名 |
 | 管理员授权 Admin auth | 中间件 + Policy 双重保护 |
+| 安装器锁定 Installer lock | 安装完成写入 `storage/app/installed.lock`，安装接口永久 403 + 限流 Install lock file + rate limiting |
 | 敏感文件 Sensitive files | Nginx 禁止访问 `.env` |
 | 生产模式 Production | `APP_DEBUG=false` |
 
@@ -162,12 +163,13 @@ chown -R www:www /www/wwwroot/signify
 
 ---
 
-## 🐳 Docker 部署 / Docker（可选 optional）
+## 🐳 Docker 部署 / Docker（可选 optional，本地/演示环境）
 
 ```bash
 cd Signify
-docker-compose up -d
-# 访问 http://localhost
+docker compose up -d --build
+# 首次启动自动完成 key:generate / migrate / storage:link
+# 访问 http://localhost （数据库默认不对外暴露端口）
 ```
 
 ---
