@@ -125,35 +125,18 @@ class Entrepreneur extends Model
     }
 
     /**
-     * 社交平台网址 → 黑色图标文件名（按域名识别；未知域名回退默认 google.svg）
+     * 社交平台网址 → 黑色图标文件名（按域名识别；未知域名回退 default）。
+     * 映射数据源：config/social-icons.php（前端个人中心预览共用同一份）。
      */
     public static function socialIconForUrl(?string $url): string
     {
+        $default = (string) config('social-icons.default', 'google.svg');
         if (!$url) {
-            return 'google.svg';
+            return $default;
         }
 
         $host = strtolower((string) parse_url($url, PHP_URL_HOST));
-        $map = [
-            'abincheung.com' => 'logo.svg',
-            'foxfun.cn' => 'logo.svg',
-            '61ml.com' => 'logo.svg',
-            'voue.cn' => 'logo.svg',
-            'vour.cn' => 'logo.svg',
-            'ihote.com' => 'logo.svg',
-            '61lm.com' => 'logo.svg',
-            'xiaohongshu.com' => 'xiaohongshu.svg',
-            'weibo.com' => 'weibo.svg',
-            'weibo.cn' => 'weibo.svg',
-            'douyin.com' => 'douyin.svg',
-            'facebook.com' => 'facebook.svg',
-            'fb.com' => 'facebook.svg',
-            'instagram.com' => 'instagram.svg',
-            'telegram.me' => 'telegram.svg',
-            't.me' => 'telegram.svg',
-            'whatsapp.com' => 'whatsapp.svg',
-            'wa.me' => 'whatsapp.svg',
-        ];
+        $map = (array) config('social-icons.map', []);
 
         foreach ($map as $domain => $file) {
             // 边界匹配：主域本身或子域名（xxx.domain.com）才命中，避免仿冒域名误判
@@ -162,6 +145,6 @@ class Entrepreneur extends Model
             }
         }
 
-        return 'google.svg';
+        return $default;
     }
 }

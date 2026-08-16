@@ -23,7 +23,7 @@ class BatchActionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ids' => 'required|array',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'integer',
         ];
     }
