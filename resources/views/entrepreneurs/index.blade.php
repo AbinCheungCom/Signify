@@ -62,13 +62,14 @@
             @endif
           </div>
           <div class="p-6">
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center justify-center gap-2">
               <h3 class="font-display text-xl font-bold text-ink group-hover:text-accent transition-colors duration-200">{{ $entrepreneur->name }}</h3>
               @if($entrepreneur->is_featured)
-                <span class="bg-ink text-paper text-[11px] uppercase tracking-widest px-2.5 py-1 flex-shrink-0">推荐</span>
+                <img src="{{ asset('icons/recommend.svg') }}" alt="推荐"
+                     class="w-5 h-5 object-contain flex-shrink-0">
               @endif
             </div>
-            <p class="label-caption text-muted mt-2">{{ $entrepreneur->industry }} · {{ $entrepreneur->city }}</p>
+            <p class="label-caption text-muted mt-2 text-center">{{ $entrepreneur->industry }} · {{ $entrepreneur->city }}</p>
             @if($entrepreneur->bio)
               <p class="mt-3 text-sm text-ink-soft line-clamp-2 leading-relaxed">{{ $entrepreneur->bio }}</p>
             @endif
