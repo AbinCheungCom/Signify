@@ -94,7 +94,7 @@ class SetupController extends Controller
             'app_name' => 'required|string|max:50',
             'app_url' => 'required|url',
             'admin_email' => 'required|email',
-            'admin_password' => 'required|min:8|confirmed',
+            'admin_password' => 'required|min:6|confirmed',
         ]);
 
         try {
@@ -103,6 +103,18 @@ class SetupController extends Controller
 
             // 2. 写入 .env 配置
             $this->writeEnvFile($data);
+
+            // 2.1 显式刷新当前进程的 DB 配置。
+            //     Laravel 在请求启动时加载 .env，写入文件不会自动生效，
+            //     不刷新会导致 migrate/createAdmin 仍连旧库（BUG 修复）。
+            config([
+                'database.default' => 'mysql',
+                'database.connections.mysql.host' => $data['host'],
+                'database.connections.mysql.port' => (int) $data['port'],
+                'database.connections.mysql.database' => $data['database'],
+                'database.connections.mysql.username' => $data['username'],
+                'database.connections.mysql.password' => $data['password'],
+            ]);
 
             // 3. 运行迁移
             Artisan::call('migrate', ['--force' => true]);
@@ -149,7 +161,7 @@ class SetupController extends Controller
     private function writeEnvFile($data)
     {
         $appKey = $this->generateAppKey();
-        $escapedPassword = addslashes($data['password']);
+        $escapedPassword = $this->escapeEnvValue($data['password']);
 
         // P1修复：使用用户填写的 APP_URL，不再硬编码 http://localhost
         $appUrl = rtrim($data['app_url'], '/');
@@ -190,6 +202,15 @@ ENV;
     {
         $key = bin2hex(random_bytes(32));
         return 'base64:' . base64_encode(hex2bin($key));
+    }
+
+    /**
+     * 转义 .env 双引号值（兼容 phpdotenv 解析规则）：
+     * \ → \\，$ → \$（防变量插值），" → \"
+     */
+    private function escapeEnvValue(string $value): string
+    {
+        return str_replace(['\\', '$', '"'], ['\\\\', '\$', '\"'], $value);
     }
 
     /**

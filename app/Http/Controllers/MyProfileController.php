@@ -8,6 +8,7 @@ use App\Models\Entrepreneur;
 use App\Services\AvatarService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class MyProfileController extends Controller
 {
@@ -44,26 +45,42 @@ class MyProfileController extends Controller
         // 文件字段由下方单独处理（避免空文件输入把已有图片清空）
         unset($data['avatar'], $data['wechat_qrcode'], $data['portrait']);
 
-        // 头像：先校验并存储新图，成功后再删旧图（失败不误删）
-        if ($request->hasFile('avatar')) {
-            $data['avatar'] = $avatarService->store($request->file('avatar'));
-            $avatarService->delete($entrepreneur->avatar);
+        $newFiles = [];
+
+        try {
+            // 全部图片先校验并存储，任一失败则回滚已存文件（保证原子性）
+            if ($request->hasFile('avatar')) {
+                $newFiles['avatar'] = $avatarService->store($request->file('avatar'), 'avatars', 'avatar');
+            }
+            if ($request->hasFile('wechat_qrcode')) {
+                $newFiles['wechat_qrcode'] = $avatarService->store($request->file('wechat_qrcode'), 'qrcodes', 'wechat_qrcode');
+            }
+            if ($request->hasFile('portrait')) {
+                $newFiles['portrait'] = $avatarService->store($request->file('portrait'), 'portraits', 'portrait');
+            }
+        } catch (ValidationException $e) {
+            // 回滚本次已存的新文件，避免残留
+            foreach ($newFiles as $path) {
+                $avatarService->delete($path);
+            }
+            throw $e;
         }
 
-        // 微信二维码：同上
-        if ($request->hasFile('wechat_qrcode')) {
-            $data['wechat_qrcode'] = $avatarService->store($request->file('wechat_qrcode'), 'qrcodes');
-            $avatarService->delete($entrepreneur->wechat_qrcode);
-        }
-
-        // 形象照（4:5 名片主图）：裁剪时与头像同源自动派生
-        if ($request->hasFile('portrait')) {
-            $data['portrait'] = $avatarService->store($request->file('portrait'), 'portraits');
-            $avatarService->delete($entrepreneur->portrait);
-        }
+        // 全部成功后：记录旧图 → 落库 → 删旧图（失败不误删）
+        $oldFiles = [
+            'avatar' => $entrepreneur->avatar,
+            'wechat_qrcode' => $entrepreneur->wechat_qrcode,
+            'portrait' => $entrepreneur->portrait,
+        ];
 
         // 直接 update：文本字段为空时（null）即清空生效
-        $entrepreneur->update($data);
+        $entrepreneur->update(array_merge($data, $newFiles));
+
+        foreach ($newFiles as $field => $path) {
+            if (!empty($oldFiles[$field])) {
+                $avatarService->delete($oldFiles[$field]);
+            }
+        }
 
         return redirect()->back()->with('success', '信息更新成功！');
     }

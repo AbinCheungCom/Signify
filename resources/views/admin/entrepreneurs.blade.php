@@ -56,6 +56,7 @@
             <th class="px-4 py-3 label-caption text-muted">姓名</th>
             <th class="px-4 py-3 label-caption text-muted">行业 · 城市</th>
             <th class="px-4 py-3 label-caption text-muted">状态</th>
+            <th class="px-4 py-3 label-caption text-muted">浏览量</th>
             <th class="px-4 py-3 label-caption text-muted text-right">操作</th>
           </tr>
         </thead>
@@ -91,6 +92,7 @@
                   <span class="bg-ink text-paper text-[10px] uppercase tracking-widest px-2 py-0.5 ml-2">推荐</span>
                 @endif
               </td>
+              <td class="px-4 py-4 text-sm tabular-nums text-ink-soft">{{ number_format($entrepreneur->view_count ?? 0) }}</td>
               <td class="px-4 py-4">
                 <div class="flex items-center justify-end gap-4 whitespace-nowrap">
                   <form method="POST" action="{{ route('admin.toggle-featured', $entrepreneur) }}">

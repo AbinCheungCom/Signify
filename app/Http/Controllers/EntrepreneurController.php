@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Entrepreneur;
+use App\Models\EntrepreneurView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -54,7 +55,7 @@ class EntrepreneurController extends Controller
      * 企业家详情。
      * 访客仅可见已认证档案；本人可见自己的档案（含待审核/已拒绝）。
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $entrepreneur = Entrepreneur::where('id', $id)
             ->where(function ($q) {
@@ -63,8 +64,36 @@ class EntrepreneurController extends Controller
             })
             ->firstOrFail();
 
+        $this->trackView($request, $entrepreneur);
+
         return view('entrepreneurs.show', [
             'entrepreneur' => $entrepreneur->load('user'),
+        ]);
+    }
+
+    /**
+     * 访客浏览计数：同一会话 24 小时内只计 1 次（刷新/爬虫不重复计入）。
+     * 档案本人浏览自己的页面不计入访客数。
+     */
+    private function trackView(Request $request, Entrepreneur $entrepreneur): void
+    {
+        // 本人浏览自己的档案不计入（避免虚增浏览量）
+        if (Auth::id() === $entrepreneur->user_id) {
+            return;
+        }
+
+        $sessionKey = 'viewed_entrepreneur_' . $entrepreneur->id;
+        $lastView = $request->session()->get($sessionKey);
+
+        if ($lastView && $lastView->gt(now()->subHours(24))) {
+            return;
+        }
+
+        $request->session()->put($sessionKey, now());
+        $entrepreneur->increment('view_count');
+        EntrepreneurView::create([
+            'entrepreneur_id' => $entrepreneur->id,
+            'session_key' => $request->session()->getId(),
         ]);
     }
 }

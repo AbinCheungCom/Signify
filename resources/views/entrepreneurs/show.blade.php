@@ -3,8 +3,8 @@
 @section('title', $entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY'))
 
 {{-- 分享卡片：图片用该企业家上传的头像；无头像时不覆盖 og-image，回退到系统设置的全局分享图 --}}
-@section('og-title', e($entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY')))
-@section('og-description', e(\Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: \App\Models\Setting::get('site_description', '每一份引领行业的商业远见，都值得被更广泛地看见')), 80)))
+@section('og-title', $entrepreneur->name.' — '.\App\Models\Setting::get('site_name', 'SIGNIFY'))
+@section('og-description', \Illuminate\Support\Str::limit(trim($entrepreneur->bio ?: $entrepreneur->industry ?: \App\Models\Setting::get('site_description', '每一份引领行业的商业远见，都值得被更广泛地看见')), 80))
 @section('og-url', route('entrepreneurs.show', $entrepreneur->id))
 @if($entrepreneur->portrait || $entrepreneur->avatar)
   @section('og-image', url('storage/'.($entrepreneur->portrait ?? $entrepreneur->avatar)))
@@ -29,7 +29,12 @@
       @if($entrepreneur->is_featured)
         <span class="bg-ink text-paper text-[11px] uppercase tracking-widest px-2.5 py-1">推荐</span>
       @endif
-      <p class="label-caption text-accent mt-4">{{ $entrepreneur->industry ?? '—' }} · {{ $entrepreneur->city ?? '—' }}</p>
+      <div class="flex items-center justify-between mt-4">
+        <p class="label-caption text-accent">{{ $entrepreneur->industry ?? '—' }} · {{ $entrepreneur->city ?? '—' }}</p>
+        @if(($entrepreneur->view_count ?? 0) > 10)
+          <p class="label-caption text-muted">{{ number_format($entrepreneur->view_count) }} 人浏览过</p>
+        @endif
+      </div>
       <h1 class="mt-4 font-display text-display-lg font-black text-ink">{{ $entrepreneur->name }}</h1>
       @if($entrepreneur->title)
         <p class="mt-2 text-lg text-ink-soft">{{ $entrepreneur->title }}</p>
@@ -39,7 +44,7 @@
         <p class="mt-8 text-lg text-ink-soft leading-relaxed whitespace-pre-line">{{ $entrepreneur->bio }}</p>
       @endif
 
-      @if($entrepreneur->wechat_qrcode || $entrepreneur->contact_phone || $entrepreneur->contact_email || $entrepreneur->social_url)
+      @if($entrepreneur->wechat_qrcode || $entrepreneur->contact_phone || $entrepreneur->contact_email || !empty($entrepreneur->social_links))
         <div class="mt-10 pt-8 border-t border-hairline flex items-center justify-center gap-8" x-data="{ showQr: false }">
           @if($entrepreneur->wechat_qrcode)
             <button type="button" @click="showQr = true"
@@ -66,13 +71,15 @@
               </svg>
             </a>
           @endif
-          @if($entrepreneur->social_url && \Illuminate\Support\Str::startsWith($entrepreneur->social_url, ['http://', 'https://']))
-            <a href="{{ e($entrepreneur->social_url) }}" target="_blank" rel="noopener"
-               class="text-ink hover:opacity-60 transition-opacity" title="{{ parse_url($entrepreneur->social_url, PHP_URL_HOST) }}">
-              <img src="{{ asset('icons/'.\App\Models\Entrepreneur::socialIconForUrl($entrepreneur->social_url)) }}"
-                   class="w-6 h-6 object-contain" alt="{{ parse_url($entrepreneur->social_url, PHP_URL_HOST) }}">
-            </a>
-          @endif
+          @foreach(($entrepreneur->social_links ?? []) as $socialUrl)
+            @if($socialUrl && \Illuminate\Support\Str::startsWith($socialUrl, ['http://', 'https://']))
+              <a href="{{ e($socialUrl) }}" target="_blank" rel="noopener"
+                 class="text-ink hover:opacity-60 transition-opacity" title="{{ parse_url($socialUrl, PHP_URL_HOST) }}">
+                <img src="{{ asset('icons/'.\App\Models\Entrepreneur::socialIconForUrl($socialUrl)) }}"
+                     class="w-6 h-6 object-contain" alt="{{ parse_url($socialUrl, PHP_URL_HOST) }}">
+              </a>
+            @endif
+          @endforeach
 
           <!-- 微信二维码弹窗 -->
           <div x-show="showQr" x-cloak @keydown.escape.window="showQr = false"

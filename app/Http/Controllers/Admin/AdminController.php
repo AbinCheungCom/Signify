@@ -22,13 +22,13 @@ class AdminController extends Controller
         $pending = Entrepreneur::where('status', Entrepreneur::STATUS_PENDING)
             ->with('user')
             ->latest()
-            ->paginate(10)
+            ->paginate(10, ['*'], 'page_cert')
             ->withQueryString();
 
         $featuredPending = Entrepreneur::featuredPending()
             ->with('user')
             ->latest('featured_requested_at')
-            ->paginate(10)
+            ->paginate(10, ['*'], 'page_featured')
             ->withQueryString();
 
         $featuredPendingCount = Entrepreneur::featuredPending()->count();
@@ -243,10 +243,11 @@ class AdminController extends Controller
         // 上传优先：选择了图片文件则覆盖 share_image（复用 AvatarService，兼容缺 fileinfo）
         if ($request->hasFile('share_image_file')) {
             try {
-                $data['share_image'] = url('storage/' . $avatarService->store($request->file('share_image_file'), 'settings'));
+                $data['share_image'] = url('storage/' . $avatarService->store($request->file('share_image_file'), 'settings', 'share_image_file'));
             } catch (ValidationException $e) {
+                // 取 store() 抛出的具体错误消息，挂到 share_image_file 字段
                 throw ValidationException::withMessages([
-                    'share_image_file' => $e->errors()['avatar'][0] ?? '图片格式不支持',
+                    'share_image_file' => collect($e->errors())->flatten()->first() ?? '图片格式不支持',
                 ]);
             }
         }

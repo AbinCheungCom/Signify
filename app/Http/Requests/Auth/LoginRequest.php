@@ -20,6 +20,14 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * 登录前将邮箱统一转为小写，与注册存储保持一致
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => Str::lower($this->email)]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>

@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 
 class RegisteredUserController extends Controller
@@ -25,14 +26,17 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // 邮箱统一转为小写存储
+        $request->merge(['email' => Str::lower($request->email)]);
+
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'email' => 'required|string|email|max:255|unique:'.User::class,
+            'password' => ['required', 'confirmed', Rules\Password::min(6)],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            // 注册不填姓名：以邮箱前缀作为默认展示名（档案姓名在个人中心单独设置）
+            'name' => Str::before($request->email, '@'),
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);

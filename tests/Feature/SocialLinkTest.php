@@ -12,9 +12,9 @@ class SocialLinkTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 本人可保存社交主页网址
+     * 本人可保存多条社交主页网址
      */
-    public function test_user_can_update_social_link(): void
+    public function test_user_can_update_social_links(): void
     {
         $user = User::factory()->create();
         $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
@@ -22,13 +22,19 @@ class SocialLinkTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->patch('/my/profile', [
-            'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
+            'social_links' => [
+                'https://www.xiaohongshu.com/user/profile/abc',
+                'https://weibo.com/u/123',
+            ],
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('entrepreneurs', [
             'id' => $entrepreneur->id,
-            'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
+            'social_links' => json_encode([
+                'https://www.xiaohongshu.com/user/profile/abc',
+                'https://weibo.com/u/123',
+            ]),
         ]);
     }
 
@@ -43,27 +49,163 @@ class SocialLinkTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->from('/my/profile')->patch('/my/profile', [
-            'social_url' => 'not-a-url',
+            'social_links' => ['not a url'],
         ]);
 
-        $response->assertSessionHasErrors('social_url');
+        $response->assertSessionHasErrors('social_links.0');
     }
 
     /**
-     * 名片按域名识别展示社交图标与链接
+     * 空白项 / 重复项被自动清理
      */
-    public function test_card_shows_social_icon_link(): void
+    public function test_blank_and_duplicate_links_cleaned(): void
+    {
+        $user = User::factory()->create();
+        $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $response = $this->patch('/my/profile', [
+            'social_links' => [
+                '  https://weibo.com/u/1  ',
+                '',
+                'https://weibo.com/u/1',
+                'https://douyin.com/@x',
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('entrepreneurs', [
+            'id' => $entrepreneur->id,
+            'social_links' => json_encode([
+                'https://weibo.com/u/1',
+                'https://douyin.com/@x',
+            ]),
+        ]);
+    }
+
+    /**
+     * 不带协议自动补全 http://
+     */
+    public function test_missing_protocol_auto_prepends_http(): void
+    {
+        $user = User::factory()->create();
+        $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $this->from('/my/profile')->patch('/my/profile', [
+            'social_links' => ['weibo.com/u/123'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('entrepreneurs', [
+            'id' => $entrepreneur->id,
+            'social_links' => json_encode(['http://weibo.com/u/123']),
+        ]);
+    }
+
+    /**
+     * 协议相对 //xxx 自动补全 http://
+     */
+    public function test_protocol_relative_auto_prepends_http(): void
+    {
+        $user = User::factory()->create();
+        $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $this->from('/my/profile')->patch('/my/profile', [
+            'social_links' => ['//weibo.com/u/123'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('entrepreneurs', [
+            'id' => $entrepreneur->id,
+            'social_links' => json_encode(['http://weibo.com/u/123']),
+        ]);
+    }
+
+    /**
+     * 已带协议原样保留
+     */
+    public function test_existing_protocol_kept(): void
+    {
+        $user = User::factory()->create();
+        $entrepreneur = Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $this->from('/my/profile')->patch('/my/profile', [
+            'social_links' => ['https://weibo.com/u/123'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('entrepreneurs', [
+            'id' => $entrepreneur->id,
+            'social_links' => json_encode(['https://weibo.com/u/123']),
+        ]);
+    }
+
+    /**
+     * 最多 5 条，超出被拦截
+     */
+    public function test_max_five_links_enforced(): void
+    {
+        $user = User::factory()->create();
+        Entrepreneur::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $urls = collect(range(1, 6))
+            ->map(fn ($i) => "https://example.com/{$i}")
+            ->all();
+
+        $this->from('/my/profile')->patch('/my/profile', [
+            'social_links' => $urls,
+        ])->assertSessionHasErrors('social_links');
+    }
+
+    /**
+     * 空数组清空全部链接
+     */
+    public function test_empty_links_clear_all(): void
+    {
+        $user = User::factory()->create();
+        Entrepreneur::factory()->create([
+            'user_id' => $user->id,
+            'social_links' => ['https://weibo.com/u/123'],
+        ]);
+
+        $this->actingAs($user);
+
+        $this->from('/my/profile')->patch('/my/profile', [
+            'social_links' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('entrepreneurs', [
+            'user_id' => $user->id,
+            'social_links' => json_encode([]),
+        ]);
+    }
+
+    /**
+     * 名片按域名识别展示社交图标与链接（多条）
+     */
+    public function test_card_shows_social_icon_links(): void
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://www.xiaohongshu.com/user/profile/abc',
+            'social_links' => [
+                'https://www.xiaohongshu.com/user/profile/abc',
+                'https://weibo.com/u/123',
+            ],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
 
         $response->assertStatus(200);
         $response->assertSee('icons/xiaohongshu.svg');
+        $response->assertSee('icons/weibo.svg');
         $response->assertSee('https://www.xiaohongshu.com/user/profile/abc');
+        $response->assertSee('https://weibo.com/u/123');
     }
 
     /**
@@ -73,7 +215,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://weibo.com/u/123',
+            'social_links' => ['https://weibo.com/u/123'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -89,7 +231,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://m.weibo.cn/u/123',
+            'social_links' => ['https://m.weibo.cn/u/123'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -105,7 +247,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://example.com',
+            'social_links' => ['https://example.com'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -121,7 +263,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'ftp://example.com',
+            'social_links' => ['ftp://example.com'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -138,7 +280,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://www.abincheung.com/about',
+            'social_links' => ['https://www.abincheung.com/about'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -154,7 +296,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://xxx.61ml.com/about',
+            'social_links' => ['https://xxx.61ml.com/about'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -170,7 +312,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => 'https://www.61lm.com.cn/about',
+            'social_links' => ['https://www.61lm.com.cn/about'],
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);
@@ -187,7 +329,7 @@ class SocialLinkTest extends TestCase
     {
         $entrepreneur = Entrepreneur::factory()->create([
             'status' => Entrepreneur::STATUS_APPROVED,
-            'social_url' => null,
+            'social_links' => null,
         ]);
 
         $response = $this->get('/entrepreneurs/'.$entrepreneur->id);

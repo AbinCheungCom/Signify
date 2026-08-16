@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Entrepreneur extends Model
 {
@@ -27,12 +28,14 @@ class Entrepreneur extends Model
         'wechat_qrcode',
         'social_platform',
         'social_url',
+        'social_links',
         'is_featured',
         'status',
         'featured_request_status',
         'featured_reason',
         'featured_requested_at',
         'featured_rejected_at',
+        'view_count',
     ];
 
     /**
@@ -40,8 +43,10 @@ class Entrepreneur extends Model
      */
     protected $casts = [
         'is_featured' => 'boolean',
+        'social_links' => 'array',
         'featured_requested_at' => 'datetime',
         'featured_rejected_at' => 'datetime',
+        'view_count' => 'integer',
     ];
 
     /**
@@ -65,6 +70,14 @@ class Entrepreneur extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * 访客浏览记录
+     */
+    public function views(): HasMany
+    {
+        return $this->hasMany(EntrepreneurView::class);
     }
 
     /**
@@ -100,13 +113,14 @@ class Entrepreneur extends Model
             return $query;
         }
 
-        // 转义特殊字符防止 LIKE 注入
-        $escaped = addcslashes($search, '%_');
+        // 用显式 ESCAPE 字符兼容 MySQL 与 SQLite 的 LIKE 转义
+        // （addcslashes 的 \% 只在 MySQL 生效，SQLite 需 ESCAPE 子句）
+        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search);
 
         return $query->where(function ($q) use ($escaped) {
-            $q->where('name', 'like', "%{$escaped}%")
-              ->orWhere('industry', 'like', "%{$escaped}%")
-              ->orWhere('city', 'like', "%{$escaped}%");
+            $q->whereRaw("name LIKE ? ESCAPE '!'", ["%{$escaped}%"])
+              ->orWhereRaw("industry LIKE ? ESCAPE '!'", ["%{$escaped}%"])
+              ->orWhereRaw("city LIKE ? ESCAPE '!'", ["%{$escaped}%"]);
         });
     }
 

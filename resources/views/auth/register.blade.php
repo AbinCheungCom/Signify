@@ -11,26 +11,20 @@
     @csrf
 
     <div>
-      <label class="label-caption text-muted">姓名</label>
-      <input type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" class="input-line">
-      @error('name') <p class="field-error">{{ $message }}</p> @enderror
-    </div>
-
-    <div>
       <label class="label-caption text-muted">邮箱</label>
-      <input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="input-line">
+      <input type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" class="input-line placeholder:text-muted/60">
       @error('email') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
     <div>
       <label class="label-caption text-muted">密码</label>
-      <input type="password" name="password" required autocomplete="new-password" class="input-line">
+      <input type="password" name="password" required autocomplete="new-password" placeholder="至少 6 个字符" class="input-line placeholder:text-muted/60">
       @error('password') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
     <div>
       <label class="label-caption text-muted">确认密码</label>
-      <input type="password" name="password_confirmation" required autocomplete="new-password" class="input-line">
+      <input type="password" name="password_confirmation" required autocomplete="new-password" placeholder="再次输入密码" class="input-line placeholder:text-muted/60">
     </div>
 
     <button type="submit" class="btn-ink w-full">注册</button>

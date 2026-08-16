@@ -10,7 +10,7 @@
 @section('title', '个人中心')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-6 py-16" x-data="profileUpload({{ $errors->has('reason') ? 'true' : 'false' }}, @js(old('social_url', $entrepreneur->social_url ?? '')))">
+<div class="max-w-4xl mx-auto px-6 py-16" x-data="profileUpload({{ $errors->has('reason') ? 'true' : 'false' }}, @js(old('social_links', $entrepreneur->social_links ?? [])))">
   <p class="label-caption text-accent mb-4">MY PROFILE</p>
   <h1 class="font-display text-display-lg font-black text-ink mb-10">个人中心</h1>
 
@@ -221,15 +221,29 @@
 
       <div>
         <label class="label-caption text-muted">社交平台主页</label>
-        <div class="flex items-center gap-3">
-          <img :src="'{{ asset('icons') }}/' + socialIconFromUrl(socialUrl)"
-               x-show="socialUrl.trim() !== ''"
-               class="w-5 h-5 flex-shrink-0 object-contain" alt="社交平台图标">
-          <input type="url" name="social_url" x-model="socialUrl"
-                 value="{{ old('social_url', $entrepreneur->social_url) }}"
-                 placeholder="https://… 粘贴你的社交主页链接" class="input-line">
+        <div class="space-y-3">
+          <template x-for="(link, i) in socialLinks" :key="i">
+            <div class="flex items-center gap-3">
+              <img :src="'{{ asset('icons') }}/' + socialIconFromUrl(link)"
+                   x-show="(link || '').trim() !== ''"
+                   class="w-5 h-5 flex-shrink-0 object-contain" alt="社交平台图标">
+              <input type="url" name="social_links[]" x-model="socialLinks[i]"
+                     :placeholder="'https://… 社交主页链接 ' + (i + 1)"
+                     class="input-line flex-1">
+              <button type="button" @click="removeSocial(i)"
+                      class="label-caption text-muted hover:text-status-danger transition-colors flex-shrink-0"
+                      aria-label="删除该社交链接">删除</button>
+            </div>
+          </template>
         </div>
-        @error('social_url') <p class="field-error">{{ $message }}</p> @enderror
+        <button type="button" @click="addSocial()" x-show="socialLinks.length < 5"
+                class="mt-3 inline-flex items-center gap-2 label-caption text-accent hover:opacity-70 transition-opacity">
+          <span class="w-4 h-4 border border-current grid place-items-center leading-none">＋</span>
+          添加社交主页
+        </button>
+        <p class="mt-1.5 text-xs text-muted" x-show="socialLinks.length >= 5">最多添加 5 个社交主页</p>
+        @error('social_links') <p class="field-error">{{ $message }}</p> @enderror
+        @error('social_links.*') <p class="field-error">{{ $message }}</p> @enderror
       </div>
 
       <div>
@@ -258,10 +272,10 @@
   @endif
 </div>
 <script>
-  window.profileUpload = function (applyModal, socialUrl) {
+  window.profileUpload = function (applyModal, socialLinks) {
     return {
       applyModal: !!applyModal,
-      socialUrl: socialUrl || '',
+      socialLinks: Array.isArray(socialLinks) ? socialLinks.map(String) : [],
       cropType: null,
       cropSrc: null,
       cropOpen: false,
@@ -269,9 +283,27 @@
       avatarPreview: null,
       qrPreview: null,
 
+      // 新增社交主页（最多 5 条）
+      addSocial() {
+        if (this.socialLinks.length < 5) this.socialLinks.push('');
+      },
+
+      // 删除第 i 条社交主页
+      removeSocial(i) {
+        this.socialLinks.splice(i, 1);
+      },
+
       // 按网址域名识别社交平台图标（未知域名回退默认 google.svg）
+      // 与 PHP 端 socialIconForUrl 一致：先提取 hostname 再匹配（修复：原实现用完整 URL 匹配导致预览恒为默认图标）
       socialIconFromUrl(url) {
-        const host = (url || '').toLowerCase();
+        let host = '';
+        try {
+          const raw = url || '';
+          const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(raw) ? raw : 'https://' + raw;
+          host = new URL(withScheme).hostname.toLowerCase();
+        } catch (e) {
+          host = (url || '').toLowerCase();
+        }
         const map = {
           'abincheung.com': 'logo.svg',
           'foxfun.cn': 'logo.svg',

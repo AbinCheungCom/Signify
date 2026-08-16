@@ -52,5 +52,7 @@
   }
   .field-error {
     @apply text-accent text-xs mt-1;
+    /* 系统中文字体栈：错误提示统一使用系统中文渲染 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Microsoft JhengHei", "Helvetica Neue", Arial, sans-serif;
   }
 }
