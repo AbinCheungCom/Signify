@@ -72,7 +72,9 @@ class SetupController extends Controller
 
             return response()->json(['success' => true, 'message' => '数据库连接成功']);
         } catch (PDOException $e) {
-            return response()->json(['success' => false, 'message' => '连接失败: ' . $e->getMessage()], 400);
+            // 不回显 PDO 原始错误（防数据库指纹/路径泄露），详情落日志
+            \Log::warning('Signify 安装向导数据库连接失败：'.$e->getMessage());
+            return response()->json(['success' => false, 'message' => '连接失败：请检查主机地址、端口、账号、密码是否正确（详情见 storage/logs/laravel.log）'], 400);
         }
     }
 
@@ -137,9 +139,14 @@ class SetupController extends Controller
             // 6. 清除缓存
             Artisan::call('config:clear');
 
+            // 7. 写入安装锁：此后安装接口永久拒绝（含数据库故障期间）
+            $this->writeInstallLock();
+
             return response()->json(['success' => true, 'message' => '安装成功']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => '安装失败: ' . $e->getMessage()], 500);
+            // 不回显底层异常详情（防信息泄露），完整错误落日志
+            \Log::error('Signify 安装失败：'.$e->getMessage());
+            return response()->json(['success' => false, 'message' => '安装失败，请查看 storage/logs/laravel.log 排查后再试'], 500);
         }
     }
 
@@ -231,13 +238,53 @@ ENV;
 
     /**
      * 检查系统是否已安装
+     *
+     * 锁文件（storage/app/installed.lock）是权威依据：一旦存在，
+     * 无论数据库是否可用都视为已安装，防止已部署站点在 DB 瞬断期间
+     * 被 /setup/install 重新开放导致 .env 被改写（指向外部数据库接管）。
      */
     private function isInstalled(): bool
     {
+        if ($this->hasInstallLock()) {
+            return true;
+        }
+
         try {
-            return Schema::hasTable('users') && DB::table('users')->exists();
+            $installed = Schema::hasTable('users') && DB::table('users')->exists();
         } catch (\Exception $e) {
+            // DB 异常且无锁文件（多为尚未安装的新部署）：仅此时允许安装
             return false;
+        }
+
+        // 兼容旧版本安装（无锁文件）：确认已安装后自动补写锁文件
+        // testing 环境跳过，避免测试副作用写真实 storage
+        if ($installed && ! app()->environment('testing')) {
+            $this->writeInstallLock();
+        }
+
+        return $installed;
+    }
+
+    /**
+     * 安装锁文件路径
+     */
+    private function installedLockPath(): string
+    {
+        return storage_path('app/installed.lock');
+    }
+
+    private function hasInstallLock(): bool
+    {
+        return is_file($this->installedLockPath());
+    }
+
+    /**
+     * 写入安装锁（幂等）：安装成功后调用，此后安装接口永久拒绝
+     */
+    private function writeInstallLock(): void
+    {
+        if (! $this->hasInstallLock()) {
+            @file_put_contents($this->installedLockPath(), bin2hex(random_bytes(16)).PHP_EOL);
         }
     }
 
