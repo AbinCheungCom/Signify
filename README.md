@@ -204,6 +204,37 @@ Signify/
 
 ---
 
+## 更新日志 / Changelog
+
+### v1.0.1（2025）
+
+> Release: https://github.com/Abinius/Signify/releases/tag/v1.0.1
+
+**功能 / Features**
+- 社交链接多条化：最多 5 条、缺协议自动补 `http://`、去空去重 / Multi social links (max 5, auto-prefix `http://`)
+- 详情页访客浏览量（会话 24h 去重、本人不计、超 10 才显示）/ Page views on profile (24h session dedup, excludes owner)
+- 系统设置分享卡片图片支持上传 + 裁剪（1.91:1 / 1200×630，Cropper.js）/ Share-card image upload & crop
+- 站点名称/描述统一从系统设置读取，去除硬编码 / Site name/description from settings
+
+**界面 / UI**
+- 全站页面标题统一居中（详情页、智库页、个人中心、后台等）/ Centered page titles site-wide
+- 智库页卡片姓名/领域/城市居中 + 推荐徽标改奖章图标 / Card layout centering + recommend badge
+- 详情页头部布局细化 + 小红书官方 logo 黑色版 / Detail header polish + XHS official logo
+
+**修复 / Fixes**
+- 修复 `og:title` / `<title>` 双重转义与存储型 XSS 隐患（新增回归测试）/ XSS escaping regression fix
+- 移除建档邮箱验证门槛（恢复注册即建档）/ Removed email-verification gate for profile creation
+- docker-compose 可运行化：新增 Dockerfile + 容器内 nginx 配置 / Working docker-compose
+- 安装器加固：安装锁文件 + 限流 + 错误信息收敛 / Hardened installer (lock file + rate limit)
+- PHP 版本声明对齐 `^8.2`，nginx 静态资源补 webp/avif / PHP `^8.2`, nginx webp/avif
+
+**技术 / Tech**
+- 社交域名图标映射收敛到 `config/social-icons.php` / Centralized social icon map
+- 批量操作 ids 上限 100，防巨型 `whereIn` / Batch ids cap 100
+- 62 个测试全绿 / 62 tests green
+
+---
+
 ## License
 
 MIT · [GitHub](https://github.com/Abinius/Signify) · [官方站点 / Official: vour.cn](https://vour.cn)
