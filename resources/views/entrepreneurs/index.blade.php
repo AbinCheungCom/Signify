@@ -84,4 +84,21 @@
   <x-pagination :paginator="$entrepreneurs" />
 </div>
 
+<!-- 底部 CTA · 营销心理：社会认同 → 行动号召 -->
+<section class="border-t border-hairline bg-surface">
+  <div class="max-w-7xl mx-auto px-6 py-16 text-center">
+    <p class="label-caption text-muted mb-4">SIGNIFY · ENTREPRENEURS</p>
+    <h2 class="font-display text-display-lg font-black text-ink">看到你的位置了吗？</h2>
+    <p class="mt-4 text-ink-soft max-w-xl leading-relaxed mx-auto">
+      这里的每一位，都曾和你一样——在行业里有判断、有远见，只差一个被看见的方式。
+      申请推荐，让下一张名片属于你。
+    </p>
+    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{{ route('register') }}" class="btn-ink">申请加入</a>
+      <a href="{{ route('login') }}" class="btn-outline">已有账号，登录</a>
+    </div>
+    <p class="mt-5 text-sm text-muted">30 秒提交申请 · 管理员 48 小时内审核</p>
+  </div>
+</section>
+
 @endsection
